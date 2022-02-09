@@ -39,6 +39,17 @@ def load_config(inbuilt_file_var):
         return {}
 
 
+def load_localisation(inbuilt_file_var):
+    filename = os.path.join(os.path.dirname(inbuilt_file_var), 'localisation.json')
+    try:
+        with open(filename, encoding='utf-8') as f:
+            config = json.load(f)
+            return config
+    except Exception as err:
+        hoshino.logger.exception(err)
+        return {}
+
+
 async def delete_msg(ev: CQEvent):
     try:
         await hoshino.get_bot().delete_msg(self_id=ev.self_id, message_id=ev.message_id)
