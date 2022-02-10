@@ -64,7 +64,7 @@ class ParseArgs(object):
                     code) if code else '' + holder.tips or L["PARAMETER"]
                 msg = L["CORRECT_PARAMETER_REQUIRED"].format(tip)
                 raise ParseError(msg, self.usage)
-            res.setdefault(value)
+            res.setdefault(code, value)
 
         # Check whether all required parameters get values
         for code, holder in self.argdict.items():

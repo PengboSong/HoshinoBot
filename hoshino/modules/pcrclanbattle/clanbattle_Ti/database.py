@@ -24,7 +24,7 @@ class PCRsqlite(object):
 
         # Initialize database table
         sql = f"CREATE TABLE IF NOT EXISTS {self._table} ({self._fields})"
-        with self.connect() as conn:
+        with self._connect() as conn:
             conn.execute(sql)
 
     def _connect(self):
@@ -140,34 +140,34 @@ class MemberDB(PCRsqlite):
         The table is built with the following columns:
         Columns   Description          Type   NotNull   PK
         userid    QQ user number       INT    True      True
-        alter     User group chat ID   INT    True      True
+        alt       User group chat ID   INT    True      True
         name      QQ user nickname     TEXT   True      False
         groupid   QQ group chat ID     INT    True      False
         clanid    PCR clan ID          INT    True      False
         """
         super().__init__(
             table="clanmember",
-            columns="userid, alter, name, groupid, clanid",
+            columns="userid, alt, name, groupid, clanid",
             fields='''
 userid  INT  NOT NULL,
-alter   INT  NOT NULL,
+alt     INT  NOT NULL,
 name    TEXT NOT NULL,
 groupid INT  NOT NULL,
 clanid  INT  NOT NULL,
-PRIMARY KEY (userid, alter)''')
+PRIMARY KEY (userid, alt)''')
     
     @staticmethod
     def pack_memberinfo(record : Tuple) -> Dict:
         if record:
             uid, alt, nm, gid, cid = record
-            return {"userid": uid, "alter": alt, "name": nm, "groupid": gid, "clanid": cid}
+            return {"userid": uid, "alt": alt, "name": nm, "groupid": gid, "clanid": cid}
         else:
             return {}
     
     @staticmethod
     def unpack_memberinfo(memberinfo : Dict) -> Tuple:
         if memberinfo:
-            return (memberinfo["userid"], memberinfo["alter"], memberinfo["name"], memberinfo["groupid"], memberinfo["clanid"])
+            return (memberinfo["userid"], memberinfo["alt"], memberinfo["name"], memberinfo["groupid"], memberinfo["clanid"])
         else:
             return ()
 
@@ -196,17 +196,17 @@ PRIMARY KEY (userid, alter)''')
                 logger.error("[MemberDB.add Failed] " + err)
                 raise DatabaseError(L["ADD_MEMBER_FAILED"])
     
-    def remove(self, userid : int, alter : int):
-        sql = f"DELETE FROM {self._table} WHERE userid=? AND alter=?"
+    def remove(self, userid : int, alt : int):
+        sql = f"DELETE FROM {self._table} WHERE userid=? AND alt=?"
         with self._connect() as conn:
             try:
-                conn.execute(sql, (userid, alter))
+                conn.execute(sql, (userid, alt))
             except sqlite3.DatabaseError as err:
                 logger.error("[MemberDB.remove Failed] " + err)
                 raise DatabaseError(L["REMOVE_MEMBER_FAILED"])
     
     def modify(self, memberinfo: Dict):
-        sql = f"UPDATE {self._table} SET name=?, groupid=?, clanid=? WHERE userid=? AND alter=?"
+        sql = f"UPDATE {self._table} SET name=?, groupid=?, clanid=? WHERE userid=? AND alt=?"
         with self._connect() as conn:
             try:
                 paras = self.unpack_memberinfo(memberinfo)
@@ -215,11 +215,11 @@ PRIMARY KEY (userid, alter)''')
                 logger.error("[MemberDB.modify Failed] " + err)
                 raise DatabaseError(L["MODIFY_MEMBER_FAILED"])
     
-    def find_one(self, userid : int, alter : int):
-        sql = f"SELECT {self._columns} FROM {self._table} WHERE userid=? AND alter=?"
+    def find_one(self, userid : int, alt : int):
+        sql = f"SELECT {self._columns} FROM {self._table} WHERE userid=? AND alt=?"
         with self._connect() as conn:
             try:
-                record = conn.execute(sql, (userid, alter)).fetchone()
+                record = conn.execute(sql, (userid, alt)).fetchone()
                 return self.pack_memberinfo(record)
             except sqlite3.DatabaseError as err:
                 logger.error("[MemberDB.find_one Failed] " + err)
@@ -275,7 +275,7 @@ class ClanBattleDB(PCRsqlite):
         Columns   Description              Type        NotNull   PK
         rid       Record ID for each run   INT         True      True
         userid    QQ user number           INT         True      False
-        alter     User group chat ID       INT         True      False
+        alt       User group chat ID       INT         True      False
         time      Record submit time       TIMESTAMP   True      False
         round     Record round number      INT         True      False
         boss      Record boss number       INT         True      False
@@ -286,11 +286,11 @@ class ClanBattleDB(PCRsqlite):
         """
         super().__init__(
             table=tablename,
-            columns="rid, userid, alter, time, round, boss, damage, flag",
+            columns="rid, userid, alt, time, round, boss, damage, flag",
             fields='''
 rid     INT       PRIMARY KEY AUTOINCREMENT,
 userid  INT       NOT NULL,
-alter   INT       NOT NULL,
+alt     INT       NOT NULL,
 time    TIMESTAMP NOT NULL,
 round   INT       NOT NULL,
 boss    INT       NOT NULL,
@@ -306,7 +306,7 @@ flag    INT       NOT NULL''')
     def pack_battleinfo(record : Tuple) -> Dict:
         if record:
             rid, uid, alt, t, r, b, d, flag = record
-            return {"rid": rid, "userid": uid, "alter": alt, "time": t, "round": r, "boss": b, "damage": d, "flag": flag}
+            return {"rid": rid, "userid": uid, "alt": alt, "time": t, "round": r, "boss": b, "damage": d, "flag": flag}
         else:
             return {}
     
@@ -314,20 +314,20 @@ flag    INT       NOT NULL''')
     def unpack_battleinfo(battleinfo : Dict) -> Tuple:
         if battleinfo:
             rid = battleinfo["rid"] if "rid" in battleinfo else 0
-            return (rid, battleinfo["userid"], battleinfo["alter"], battleinfo["time"], battleinfo["round"], battleinfo["boss"], battleinfo["damage"], battleinfo["flag"])
+            return (rid, battleinfo["userid"], battleinfo["alt"], battleinfo["time"], battleinfo["round"], battleinfo["boss"], battleinfo["damage"], battleinfo["flag"])
         else:
             return ()
 
     @staticmethod
-    def gen_condition_sql(userid : Optional[int] = None, alter : Optional[int] = None) -> Tuple[str, Tuple]:
+    def gen_condition_sql(userid : Optional[int] = None, alt : Optional[int] = None) -> Tuple[str, Tuple]:
         """Generate condition SQL statement after WHERE and corresponding parameter set"""
         condition_sql, condition_paras = [], []
         if userid is not None:
             condition_sql.append("userid=?")
             condition_paras.append(userid)
-        if alter is not None:
-            condition_sql.append("alter=?")
-            condition_paras.append(alter)
+        if alt is not None:
+            condition_sql.append("alt=?")
+            condition_paras.append(alt)
         return " AND ".join(condition_sql), tuple(condition_paras)
 
     
@@ -350,7 +350,7 @@ flag    INT       NOT NULL''')
                 raise DatabaseError(L["REMOVE_RECORD_FAILED"])
     
     def modify(self, battleinfo: Dict):
-        sql = f"UPDATE {self._table} SET userid=?, alter=?, time=?, round=?, boss=?, damage=?, flag=? WHERE rid=?"
+        sql = f"UPDATE {self._table} SET userid=?, alt=?, time=?, round=?, boss=?, damage=?, flag=? WHERE rid=?"
         with self._connect() as conn:
             try:
                 paras = self.unpack_battleinfo(battleinfo)
@@ -379,10 +379,10 @@ flag    INT       NOT NULL''')
                 logger.error("[ClanBattleDB.find_all Failed] " + err)
                 raise DatabaseError(L["SEARCH_RECORD_FAILED"])
     
-    def find_by(self, userid : Optional[int] = None, alter : Optional[int] = None, order_by_user: bool = False) -> List:
+    def find_by(self, userid : Optional[int] = None, alt : Optional[int] = None, order_by_user: bool = False) -> List:
         """Search all records that match the given condition"""
-        sql, paras = self.gen_condition_sql(userid, alter)
-        order = "userid, alter, round, boss, rid" if order_by_user else "round, boss, rid"
+        sql, paras = self.gen_condition_sql(userid, alt)
+        order = "userid, alt, round, boss, rid" if order_by_user else "round, boss, rid"
         if len(paras) != 0:
             sql = f"SELECT {self._columns} FROM {self._table} WHERE {sql} ORDER_BY {order}"
             with self._connect() as conn:
@@ -404,7 +404,7 @@ class SubscribeDB(PCRsqlite):
         Columns   Description              Type        NotNull   PK
         sid       Subscribe ID             INT         True      True
         userid    QQ user number           INT         True      False
-        alter     User group chat ID       INT         True      False
+        alt       User group chat ID       INT         True      False
         time      Subscribe submit time    TIMESTAMP   True      False
         round     Subscribe round number   INT         True      False
         boss      Subscribe boss number    INT         True      False
@@ -416,11 +416,11 @@ class SubscribeDB(PCRsqlite):
         """
         super().__init__(
             table=tablename,
-            columns="sid, userid, alter, time, round, boss, flag, msg",
+            columns="sid, userid, alt, time, round, boss, flag, msg",
             fields='''
 sid     INT       PRIMARY KEY AUTOINCREMENT,
 userid  INT       NOT NULL,
-alter   INT       NOT NULL,
+alt     INT       NOT NULL,
 time    TIMESTAMP NOT NULL,
 round   INT       NOT NULL,
 boss    INT       NOT NULL,
@@ -436,7 +436,7 @@ msg     TEXT      NOT NULL''')
     def pack_subscribeinfo(record : Tuple) -> Dict:
         if record:
             sid, uid, alt, t, r, b, flag, msg = record
-            return {"sid": sid, "userid": uid, "alter": alt, "time": t, "round": r, "boss": b, "flag": flag, "msg": msg}
+            return {"sid": sid, "userid": uid, "alt": alt, "time": t, "round": r, "boss": b, "flag": flag, "msg": msg}
         else:
             return {}
     
@@ -444,18 +444,18 @@ msg     TEXT      NOT NULL''')
     def unpack_subscribeinfo(subscribeinfo : Dict) -> Tuple:
         if subscribeinfo:
             sid = subscribeinfo["sid"] if "sid" in subscribeinfo else 0
-            return (sid, subscribeinfo["userid"], subscribeinfo["alter"], subscribeinfo["time"], subscribeinfo["round"], subscribeinfo["boss"], subscribeinfo["flag"], subscribe["msg"])
+            return (sid, subscribeinfo["userid"], subscribeinfo["alt"], subscribeinfo["time"], subscribeinfo["round"], subscribeinfo["boss"], subscribeinfo["flag"], subscribe["msg"])
     
     @staticmethod
-    def gen_condition_sql(userid : Optional[int] = None, alter : Optional[int] = None, round_ : Optional[int] = None, boss : Optional[int] = None, flag : Optional[int] = None) -> Tuple[str, Tuple]:
+    def gen_condition_sql(userid : Optional[int] = None, alt : Optional[int] = None, round_ : Optional[int] = None, boss : Optional[int] = None, flag : Optional[int] = None) -> Tuple[str, Tuple]:
         """Generate condition SQL statement after WHERE and corresponding parameter set"""
         condition_sql, condition_paras = [], []
         if userid is not None:
             condition_sql.append("userid=?")
             condition_paras.append(userid)
-        if alter is not None:
-            condition_sql.append("alter=?")
-            condition_paras.append(alter)
+        if alt is not None:
+            condition_sql.append("alt=?")
+            condition_paras.append(alt)
         if round_ is not None:
             condition_sql.append("round=?")
             condition_paras.append(round_)
@@ -486,7 +486,7 @@ msg     TEXT      NOT NULL''')
                 raise DatabaseError(L["REMOVE_SUBSCRIBE_FAILED"])
     
     def modify(self, subscribeinfo: Dict):
-        sql = f"UPDATE {self._table} SET userid=?, alter=?, time=?, round=?, boss=?, flag=?, msg=? WHERE sid=?"
+        sql = f"UPDATE {self._table} SET userid=?, alt=?, time=?, round=?, boss=?, flag=?, msg=? WHERE sid=?"
         with self._connect() as conn:
             try:
                 paras = self.unpack_battleinfo(subscribeinfo)
@@ -515,9 +515,9 @@ msg     TEXT      NOT NULL''')
                 logger.error("[SubscribeDB.find_all Failed] " + err)
                 raise DatabaseError(L["SEARCH_SUBSCRIBE_FAILED"])
     
-    def find_by(self, userid : Optional[int] = None, alter : Optional[int] = None, round_ : Optional[int] = None, boss : Optional[int] = None, flag : Optional[int] = None) -> List:
+    def find_by(self, userid : Optional[int] = None, alt : Optional[int] = None, round_ : Optional[int] = None, boss : Optional[int] = None, flag : Optional[int] = None) -> List:
         """Search all records that match the given condition"""
-        sql, paras = self.gen_condition_sql(userid=userid, alter=alter, round_=round_, boss=boss, flag=flag)
+        sql, paras = self.gen_condition_sql(userid=userid, alt=alt, round_=round_, boss=boss, flag=flag)
         if len(paras) != 0:
             sql = f"SELECT {self._columns} FROM {self._table} WHERE {sql}"
             with self._connect() as conn:
@@ -528,9 +528,9 @@ msg     TEXT      NOT NULL''')
                     logger.error("[SubscribeDB.find_by Failed] " + err)
                     raise DatabaseError(L["SEARCH_SUBSCRIBE_FAILED"])
     
-    def remove_by(self, userid : Optional[int] = None, alter : Optional[int] = None, round_ : Optional[int] = None, boss : Optional[int] = None, flag : Optional[int] = None):
+    def remove_by(self, userid : Optional[int] = None, alt : Optional[int] = None, round_ : Optional[int] = None, boss : Optional[int] = None, flag : Optional[int] = None):
         """Remove all members that match the given condition"""
-        sql, paras = self.gen_condition_sql(userid=userid, alter=alter, round_=round_, boss=boss, flag=flag)
+        sql, paras = self.gen_condition_sql(userid=userid, alt=alt, round_=round_, boss=boss, flag=flag)
         if len(paras) != 0:
             sql = f"DELETE FROM {self._table} WHERE {sql}"
             with self._connect() as conn:

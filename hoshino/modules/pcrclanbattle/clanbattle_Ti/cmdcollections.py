@@ -33,9 +33,9 @@ def _check_clan(bm: ClanBattleManager):
     return clan
 
 
-def _check_member(bm: ClanBattleManager, userid: int, alter: int, tip: str = ''):
+def _check_member(bm: ClanBattleManager, userid: int, alt: int, tip: str = ''):
     """Check whether the given member exists"""
-    member = bm.fetch_member(userid=userid, alter=alter)
+    member = bm.fetch_member(userid=userid, alt=alt)
     if not member:
         raise NotFoundError(tip or L["ERROR_MEMBER_NOT_FOUND"].format(
             L["USAGE_ADD_MEMBER"]) + L["USAGE_SUFFIX"])
@@ -101,8 +101,8 @@ async def add_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
         name = util.filt_message(m['card']) or util.filt_message(
             m['nickname']) or str(m['user_id'])
 
-    if (member := bm.fetch_member(userid=uid, alter=bm.groupid)):
-        bm.modify_member(uid, member['alter'], name, clan["clanid"])
+    if (member := bm.fetch_member(userid=uid, alt=bm.groupid)):
+        bm.modify_member(uid, member['alt'], name, clan["clanid"])
         await bot.send(ctx, L["INFO_MODIFY_MEMBER"].format(ms.at(uid), name))
     else:
         bm.add_member(uid, bm.groupid, name, clan["clanid"])
@@ -135,7 +135,7 @@ async def remove_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
     member = _check_member(bm, uid, bm.groupid, tip=L["MEMBER_NOT_FOUND"])
     if uid != ctx['user_id']:
         _check_admin(ctx, tip=L["TIP_REMOVE_OTHER_MEMBER"])
-    bm.remove_member(uid, member['alter'])
+    bm.remove_member(uid, member['alt'])
     await bot.send(ctx, L["INFO_REMOVE_MEMBER"].format(member["name"]), at_sender=True)
 
 
@@ -172,7 +172,7 @@ async def batch_add_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
     for m in mlist:
         if m['user_id'] != self_id:
             try:
-                bm.add_member(userid=m['user_id'], alter=bm.group, name=m['card']
+                bm.add_member(userid=m['user_id'], alt=bm.group, name=m['card']
                               or m['nickname'] or str(m['user_id']), clanid=1)
                 succ += 1
             except DatabaseError:
@@ -213,7 +213,7 @@ async def subscribe(bot: NoneBot, ctx: Context_T, args: ParseResult):
     uid = ctx["user_id"]
     clan = _check_clan(bm)
     cid = clan["clanid"]
-    _check_member(bm=bm, userid=uid, alter=bm.groupid)
+    _check_member(bm=bm, userid=uid, alt=bm.groupid)
     round_text = serial2text(args.R)
     boss_text = int2callnum(args.B)
     # Check current progress
@@ -256,7 +256,7 @@ async def subscribe_whole(bot: NoneBot, ctx: Context_T, args: ParseResult):
     uid = ctx["user_id"]
     clan = _check_clan(bm)
     cid = clan["clanid"]
-    _check_member(bm=bm, userid=uid, alter=bm.groupid)
+    _check_member(bm=bm, userid=uid, alt=bm.groupid)
     round_text = serial2text(args.R)
     boss_text = int2callnum(args.B)
     # Check current progress
@@ -276,11 +276,11 @@ async def subscribe_whole(bot: NoneBot, ctx: Context_T, args: ParseResult):
     # Check whether target boss subscirbe number has reached limit
     # For whole run, the limit should be 1
     if len(bm.list_subscribes_by_boss(cid, now, args.R, args.B)) == 0:
-        bm.add_subscribe(userid=uid, alter=bm.groupid, time=now,
+        bm.add_subscribe(userid=uid, alt=bm.groupid, time=now,
                          rcode=args.R, bcode=args.B,
                          flag=SubscribeFlag.WHOLE.value, msg=args.M)
         # Auto lock boss
-        bm.add_subscribe(userid=uid, alter=bm.groupid, time=now,
+        bm.add_subscribe(userid=uid, alt=bm.groupid, time=now,
                          rcode=args.R, bcode=args.B,
                          flag=SubscribeFlag.LOCKED.value, msg=args.M)
         msg.append(L["INFO_SUBSCRIBE"].format(round_text, boss_text))
@@ -325,10 +325,10 @@ async def unsubscribe(bot: NoneBot, ctx: Context_T, args: ParseResult):
     await bot.send(ctx, '\n'.join(msg), at_sender=True)
 
 
-async def auto_unsubscribe(bot: NoneBot, ctx: Context_T, userid: int, alter: int, rcode: int, bcode: int):
+async def auto_unsubscribe(bot: NoneBot, ctx: Context_T, userid: int, alt: int, rcode: int, bcode: int):
     bm = ClanBattleManager(ctx['group_id'])
     now = datetime.now()
-    subscribes = bm.list_subscribes_by_detail(userid, alter, now, rcode, bcode)
+    subscribes = bm.list_subscribes_by_detail(userid, alt, now, rcode, bcode)
     if len(subscribes) == 0:
         return
     subscribe = subscribes[0]
@@ -397,7 +397,7 @@ async def on_tree(bot: NoneBot, ctx: Context_T, args: ParseResult):
     for ontree in ontrees:
         if ontree["userid"] == uid:
             raise AlreadyExistError(L["ERROR_ALREADY_ON_TREE"])
-    bm.add_subscribe(userid=uid, alter=bm.groupid, time=now,
+    bm.add_subscribe(userid=uid, alt=bm.groupid, time=now,
                      rcode=current_round, bcode=current_boss,
                      flag=SubscribeFlag.ONTREE.value, msg='')
     ontrees = bm.list_subscribes_ontree(cid, now, current_round, current_boss)
@@ -437,7 +437,7 @@ async def lock_boss(bot: NoneBot, ctx: Context_T, args: ParseResult):
         await bot.send(ctx, L["ERROR_ALREADY_LOCKED"].format(round_text, boss_text, ms.at(locked["userid"])), at_sender=True)
     else:
         uid = ctx["user_id"]
-        bm.add_subscribe(userid=uid, alter=bm.groupid, time=now,
+        bm.add_subscribe(userid=uid, alt=bm.groupid, time=now,
                          rcode=current_round, bcode=current_boss,
                          flag=SubscribeFlag.LOCKED.value, msg='')
         await bot.send(ctx, L["INFO_LOCK_BOSS"].format(round_text, boss_text, ms.at(uid)), at_sender=True)
@@ -488,7 +488,7 @@ async def lock_boss_ahead(bot: NoneBot, ctx: Context_T, args: ParseResult):
         await bot.send(ctx, L["ERROR_ALREADY_LOCKED"].format(round_text, boss_text, ms.at(locked["userid"])), at_sender=True)
     else:
         uid = ctx["user_id"]
-        bm.add_subscribe(userid=uid, alter=bm.groupid, time=now,
+        bm.add_subscribe(userid=uid, alt=bm.groupid, time=now,
                          rcode=args.R, bcode=args.B,
                          flag=SubscribeFlag.LOCKED.value, msg='')
         await bot.send(ctx, L["INFO_LOCK_BOSS"].format(round_text, boss_text, ms.at(uid)), at_sender=True)
@@ -539,7 +539,7 @@ async def process_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
     bm = ClanBattleManager(ctx['group_id'])
     now = datetime.now() - timedelta(days=args.get('dayoffset', 0))
     clan = _check_clan(bm)
-    member = _check_member(bm, args.userid, args.alter)
+    member = _check_member(bm, args.userid, args.alt)
 
     current_round, current_boss, remain_hp = bm.check_progress(
         clan["clanid"], now)
@@ -555,7 +555,7 @@ async def process_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
 
     msg = []
     run_list = bm.list_run_by_user_day(
-        userid=member["userid"], alter=member["alter"], time=now)
+        userid=member["userid"], alt=member["alt"], time=now)
     # If the previous run is tail, this run must be leftover
     if len(run_list) > 0 and run_list[-1]['flag'] == RecordFlag.TAIL.value:
         flag = RecordFlag.LEFTOVER.value
@@ -581,7 +581,7 @@ async def process_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
                 else:
                     msg.append(L["INFO_LESS_DAMAGE"])
 
-    rid = bm.add_run(userid=member["userid"], alter=member["alter"],
+    rid = bm.add_run(userid=member["userid"], alt=member["alt"],
                      time=now, rcode=rcode, bcode=bcode, damage=damage, flag=flag)
     after_round, after_boss, after_hp = bm.check_progress(clanid=1, time=now)
     total_hp, score_rate = bm.get_boss_info(
@@ -612,7 +612,7 @@ async def add_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
     await process_run(bot, ctx, args={
         "round": args.R, "boss": args.B, "damage": args.get(''),
         "userid": args['@'] or args.at or ctx["user_id"],
-        "alter": ctx["group_id"],
+        "alt": ctx["group_id"],
         "flag": RecordFlag.NORMAL.value,
         "dayoffset": args.get('D', 0)})
 
@@ -627,7 +627,7 @@ async def add_run_tail(bot: NoneBot, ctx: Context_T, args: ParseResult):
     await process_run(bot, ctx, args={
         "round": args.R, "boss": args.B, "damage": args.get(''),
         "userid": args['@'] or args.at or ctx["user_id"],
-        "alter": ctx["group_id"],
+        "alt": ctx["group_id"],
         "flag": RecordFlag.TAIL.value})
 
 
@@ -641,7 +641,7 @@ async def add_run_leftover(bot: NoneBot, ctx: Context_T, args: ParseResult):
     await process_run(bot, ctx, args={
         "round": args.R, "boss": args.B, "damage": args.get(''),
         "userid": args['@'] or args.at or ctx["user_id"],
-        "alter": ctx["group_id"],
+        "alt": ctx["group_id"],
         "flag": RecordFlag.LEFTOVER.value})
 
 
@@ -654,7 +654,7 @@ async def add_run_lost(bot: NoneBot, ctx: Context_T, args: ParseResult):
     await process_run(bot, ctx, args={
         "round": args.R, "boss": args.B, "damage": 0,
         "userid": args['@'] or args.at or ctx["user_id"],
-        "alter": ctx["group_id"],
+        "alt": ctx["group_id"],
         "flag": RecordFlag.LOST.value})
 
 

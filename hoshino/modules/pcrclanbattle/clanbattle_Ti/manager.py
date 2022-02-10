@@ -140,23 +140,23 @@ class ClanBattleManager(object):
     # -*- CLAN OPERATIONS END -*-
 
     # -*- MEMBER OPERATIONS -*-
-    def add_member(self, userid: int, alter: int, name: str, clanid: int):
-        return self.members.add(MemberDB.pack_memberinfo(userid, alter, name, self.groupid, clanid))
+    def add_member(self, userid: int, alt: int, name: str, clanid: int):
+        return self.members.add(MemberDB.pack_memberinfo(userid, alt, name, self.groupid, clanid))
 
-    def remove_member(self, userid: int, alter: int):
-        return self.members.remove(userid, alter)
+    def remove_member(self, userid: int, alt: int):
+        return self.members.remove(userid, alt)
 
     def clear_members(self, clanid: Optional[int] = None):
         return self.members.remove_by(groupid=self.groupid, clanid=clanid)
 
-    def modify_member(self, userid: int, alter: int, name: str, clanid: int):
-        return self.members.modify(MemberDB.pack_memberinfo(userid, alter, name, self.groupid, clanid))
+    def modify_member(self, userid: int, alt: int, name: str, clanid: int):
+        return self.members.modify(MemberDB.pack_memberinfo(userid, alt, name, self.groupid, clanid))
 
-    def fetch_member(self, userid: int, alter: int):
-        return member if (member := self.members.find_one(userid, alter)) and member["groupid"] == self.groupid else None
+    def fetch_member(self, userid: int, alt: int):
+        return member if (member := self.members.find_one(userid, alt)) and member["groupid"] == self.groupid else None
 
-    def check_member(self, userid: int, alter: int) -> bool:
-        return True if self.fetch_member(userid, alter) else False
+    def check_member(self, userid: int, alt: int) -> bool:
+        return True if self.fetch_member(userid, alt) else False
 
     def list_members(self, clanid: Optional[int] = None) -> List:
         return self.members.find_by(groupid=self.groupid, clanid=clanid)
@@ -166,10 +166,10 @@ class ClanBattleManager(object):
     # -*- MEMBER OPERATIONS END -*-
 
     # -*- RUN OPERATIONS -*-
-    def add_run(self, userid: int, alter: int, time: datetime, rcode: int, bcode: int, damage: int, flag: int):
-        if member := self.fetch_member(userid, alter):
+    def add_run(self, userid: int, alt: int, time: datetime, rcode: int, bcode: int, damage: int, flag: int):
+        if member := self.fetch_member(userid, alt):
             record = self.fetch_battle_record(member["clanid"], time)
-            return record.add(ClanBattleDB.pack_battleinfo((0, userid, alter, time, rcode, bcode, damage, flag)))
+            return record.add(ClanBattleDB.pack_battleinfo((0, userid, alt, time, rcode, bcode, damage, flag)))
         else:
             raise NotFoundError(L["MEMBER_NOT_FOUND"])
 
@@ -177,10 +177,10 @@ class ClanBattleManager(object):
         record = self.fetch_battle_record(clanid, time)
         return record.remove(rid)
 
-    def modify_run(self, rid: int, userid: int, alter: int, time: datetime, rcode: int, bcode: int, damage: int, flag: int):
-        if member := self.fetch_member(userid, alter):
+    def modify_run(self, rid: int, userid: int, alt: int, time: datetime, rcode: int, bcode: int, damage: int, flag: int):
+        if member := self.fetch_member(userid, alt):
             record = self.fetch_battle_record(member["clanid"], time)
-            return record.modify(ClanBattleDB.pack_battleinfo((rid, userid, alter, time, rcode, bcode, damage, flag)))
+            return record.modify(ClanBattleDB.pack_battleinfo((rid, userid, alt, time, rcode, bcode, damage, flag)))
         else:
             raise NotFoundError(L["MEMBER_NOT_FOUND"])
 
@@ -192,10 +192,10 @@ class ClanBattleManager(object):
         record = self.fetch_battle_record(clanid, time)
         return record.find_all()
 
-    def list_run_by_user(self, userid: int, alter: int, time: datetime) -> List:
-        if member := self.fetch_member(userid, alter):
+    def list_run_by_user(self, userid: int, alt: int, time: datetime) -> List:
+        if member := self.fetch_member(userid, alt):
             record = self.fetch_battle_record(member["clanid"], time)
-            return record.find_by(userid=userid, alter=alter)
+            return record.find_by(userid=userid, alt=alt)
         else:
             raise NotFoundError(L["MEMBER_NOT_FOUND"])
 
@@ -210,9 +210,9 @@ class ClanBattleManager(object):
             time=time,
             hourdelta=hourdelta)
 
-    def list_run_by_user_day(self, userid: int, alter: int, time: datetime, hourdelta: int) -> List:
+    def list_run_by_user_day(self, userid: int, alt: int, time: datetime, hourdelta: int) -> List:
         return self.filter_run_by_day(
-            run_list=self.list_run_by_user(userid, alter, time),
+            run_list=self.list_run_by_user(userid, alt, time),
             time=time, hourdelta=hourdelta)
     # -*- RUN OPERATIONS END -*-
 
@@ -223,7 +223,7 @@ class ClanBattleManager(object):
         record = self.fetch_battle_record(clanid, time)
         for member in members:
             run_list = record.find_by(
-                userid=member["userid"], alter=member["alter"])
+                userid=member["userid"], alt=member["alt"])
             if one_day_only:
                 run_list = self.filter_run_by_day(
                     run_list=run_list, time=time, hourdelta=hourdelta)
@@ -240,7 +240,7 @@ class ClanBattleManager(object):
                 damage = run["damage"]
                 damages[0] += damage
                 damages[run["boss"]] += damage
-            res.append((member["userid"], member["alter"],
+            res.append((member["userid"], member["alt"],
                        member["name"], damages))
         return res
 
@@ -252,7 +252,7 @@ class ClanBattleManager(object):
             score = sum([self.cal_score(record["round"], record["boss"],
                         record["damage"], clan["server"]) for record in run_list])
             res.append(
-                (member["userid"], member["alter"], member["name"], score))
+                (member["userid"], member["alt"], member["name"], score))
         return res
 
     @staticmethod
@@ -291,7 +291,7 @@ class ClanBattleManager(object):
             normal, tail, leftover, lost = self.sum_run_list(run_list)
             remain = 3 - (normal + lost + tail)
             rleftover = tail - leftover
-            res.append((member["userid"], member["alter"],
+            res.append((member["userid"], member["alt"],
                        member["name"], remain, rleftover))
         return res
 
@@ -317,10 +317,10 @@ class ClanBattleManager(object):
     # -*- SUMMARY OPERATIONS END -*-
 
     # -*- SUBSCRIBE OPERATIONS -*-
-    def add_subscribe(self, userid: int, alter: int, time: datetime, rcode: int, bcode: int, flag: int, msg: str):
-        if member := self.fetch_member(userid, alter):
+    def add_subscribe(self, userid: int, alt: int, time: datetime, rcode: int, bcode: int, flag: int, msg: str):
+        if member := self.fetch_member(userid, alt):
             tree = self.fecth_subscribe_tree(member["clanid"], time)
-            return tree.add(SubscribeDB.pack_subscribeinfo((0, userid, alter, time, rcode, bcode, flag, msg)))
+            return tree.add(SubscribeDB.pack_subscribeinfo((0, userid, alt, time, rcode, bcode, flag, msg)))
         else:
             raise NotFoundError(L["MEMBER_NOT_FOUND"])
 
@@ -328,10 +328,10 @@ class ClanBattleManager(object):
         tree = self.fecth_subscribe_tree(clanid, time)
         return tree.remove(sid)
 
-    def modify_subscribe(self, sid: int, userid: int, alter: int, time: datetime, rcode: int, bcode: int, flag: int, msg: str):
-        if member := self.fetch_member(userid, alter):
+    def modify_subscribe(self, sid: int, userid: int, alt: int, time: datetime, rcode: int, bcode: int, flag: int, msg: str):
+        if member := self.fetch_member(userid, alt):
             tree = self.fecth_subscribe_tree(member["clanid"], time)
-            return tree.modify(SubscribeDB.pack_subscribeinfo((sid, userid, alter, time, rcode, bcode, flag, msg)))
+            return tree.modify(SubscribeDB.pack_subscribeinfo((sid, userid, alt, time, rcode, bcode, flag, msg)))
         else:
             raise NotFoundError(L["MEMBER_NOT_FOUND"])
 
@@ -343,10 +343,10 @@ class ClanBattleManager(object):
         tree = self.fecth_subscribe_tree(clanid, time)
         return tree.find_all()
 
-    def list_subscribes_by_user(self, userid: int, alter: int, time: datetime) -> List:
-        if member := self.fetch_member(userid, alter):
+    def list_subscribes_by_user(self, userid: int, alt: int, time: datetime) -> List:
+        if member := self.fetch_member(userid, alt):
             tree = self.fecth_subscribe_tree(member["clanid"], time)
-            return tree.find_by(userid=userid, alter=alter)
+            return tree.find_by(userid=userid, alt=alt)
         else:
             raise NotFoundError(L["MEMBER_NOT_FOUND"])
 
@@ -360,9 +360,9 @@ class ClanBattleManager(object):
             subscribes_list=self.list_subscribes(clanid, time),
             time=time, hourdelta=hourdelta)
 
-    def list_subscribes_by_user_day(self, userid: int, alter: int, time: datetime, hourdelta: int) -> List:
+    def list_subscribes_by_user_day(self, userid: int, alt: int, time: datetime, hourdelta: int) -> List:
         return self.filter_subscribes_by_day(
-            subscribes_list=self.list_subscribes_by_user(userid, alter, time),
+            subscribes_list=self.list_subscribes_by_user(userid, alt, time),
             time=time, hourdelta=hourdelta)
 
     @staticmethod
@@ -387,10 +387,10 @@ class ClanBattleManager(object):
             subscribes_list=filter_res,
             flags=(SubscribeFlag.NORMAL.value, SubscribeFlag.WHOLE.value))
 
-    def list_subscribes_by_detail(self, userid: int, alter: int, time: datetime, rcode: int, bcode: int) -> List:
+    def list_subscribes_by_detail(self, userid: int, alt: int, time: datetime, rcode: int, bcode: int) -> List:
         """Check whether user has already subscribed target boss"""
         return self.conditional_filter_subscribes(
-            subscribes_list=self.list_subscribes_by_user(userid, alter, time),
+            subscribes_list=self.list_subscribes_by_user(userid, alt, time),
             rcode=rcode, bcode=bcode,
             flags=(SubscribeFlag.NORMAL.value, SubscribeFlag.WHOLE.value))
 

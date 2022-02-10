@@ -53,7 +53,7 @@ async def _clanbattle_bus(bot, ctx):
             sv.logger.exception(err)
             sv.logger.error(
                 f'{type(err)} occured when {func.__name__} handling message {ctx["message_id"]}.')
-            await bot.send(ctx, L["UNEXPECTED_ERROR"].format(err.message) + L["SORRY"], at_sender=True)
+            await bot.send(ctx, L["UNEXPECTED_ERROR"].format(err) + L["SORRY"], at_sender=True)
 
 
 def cb_cmd(name, parser: ParseArgs) -> Callable:
