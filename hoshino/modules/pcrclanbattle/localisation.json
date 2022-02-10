@@ -1,0 +1,20 @@
+{
+    "zh-CN": {
+        "VERSION_TI": "Ti-v0.1-alpha",
+        "VERSION_OPEN_SOURCE": "v2",
+        "VERSION_CLOSED_SOURCE": "v3",
+        "VERSION_CLOSED_SOURCE_WEB": "v4",
+        "DESC_TI": "重构版",
+        "DESC_OPEN_SOURCE": "开源版",
+        "DESC_CLOSED_SOURCE": "指令简化版，无WEB面板，可加入Hoshinoのお茶会(787493356)体验",
+        "DESC_CLOSED_SOURCE_WEB": "WEB绝赞开发中，可加入Hoshinoのお茶会(787493356)体验",
+        "DESC_OLD_CLAN_BATTLE": "适用于：日服(~2021/06)，台服(~2021/10)，国服(~2023/06)",
+        "DESC_NEW_CLAN_BATTLE": "适用于：日服(2021/07~)，台服(2021/11~)，国服(2023/07~)",
+        "CMD_SELECT_VERSION": ["启用会战", "会战启用"],
+        "USAGE_SELECT_VERSION": "启用会战",
+        "TIP_SELECT_VERSION_PERMISSION_REQUIRED": "请*群管理*或*群主*发送【】内的指令",
+        "INFO_SELECT_VERSION_SUCCESS": "版本切换成功：当前启用HoshinoBot会战管理模块{0}\n{1}", 
+        "INFO_SELECT_VERSION_PERMISSION_DENIED": "版本切换失败：只有*群管理*和*群主*才能切换会战管理版本",
+        "INFO_SELECT_VERSION_MODULE_MISSING": "版本切换失败：本bot未实装HoshinoBot会战管理模块{0}"
+    }
+}

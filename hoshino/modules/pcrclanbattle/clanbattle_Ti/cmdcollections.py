@@ -1,8 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Iterable, List
 
-from hoshino.modules.pcrclanbattle.clanbattle.cmdv2 import auto_unlock_boss
-
 from aiocqhttp.exceptions import ActionFailed
 from hoshino import util, priv
 from matplotlib import pyplot as plt

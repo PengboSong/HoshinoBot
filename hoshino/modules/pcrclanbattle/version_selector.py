@@ -1,39 +1,49 @@
-from hoshino import Service, priv
+from hoshino import Service, priv, util
 from hoshino.typing import CQEvent
 
-sv = Service('clanbattle-version-selector', manage_priv=priv.SUPERUSER, visible=False)
+lang = "zh-CN"
+L = util.load_localisation(__file__)[lang]
 
-help_str = '''
-请*群管理*或*群主*发送【】内的命令
-【启用会战v2】
-Hoshino开源版 命令以感叹号开头
-适用于2021年6月前的日服、2021年10月前的台服、2023年6月前的B服
+sv = Service('clanbattle-version-selector',
+             manage_priv=priv.SUPERUSER, visible=False)
 
-【启用会战v3】
-指令简化版 无web面板
-适用于2021年6月前的日服、2021年10月前的台服、2023年6月前的B服
+HELP_DESC = f'''
+{L["TIP_SELECT_VERSION_PERMISSION_REQUIRED"]}
+【{L["USAGE_SELECT_VERSION"]}{L["VERSION_OPEN_SOURCE"]}】
+{L["DESC_OPEN_SOURCE"]}
+{L["DESC_OLD_CLAN_BATTLE"]}
 
-【启用会战v4】
-适用于2021年7月后的日服、2021年11月后的台服、2023年7月后的B服
-web绝赞开发中
+【{L["USAGE_SELECT_VERSION"]}{L["VERSION_CLOSED_SOURCE"]}】
+{L["DESC_CLOSED_SOURCE"]}
+{L["DESC_OLD_CLAN_BATTLE"]}
+
+【{L["USAGE_SELECT_VERSION"]}{L["VERSION_CLOSED_SOURCE_WEB"]}】
+{L["DESC_CLOSED_SOURCE_WEB"]}
+{L["DESC_NEW_CLAN_BATTLE"]}
+
+【{L["USAGE_SELECT_VERSION"]}{L["VERSION_TI"]}】
+{L["DESC_TI"]}
+{L["DESC_OLD_CLAN_BATTLE"]}
 '''.strip()
 
-@sv.on_prefix('会战启用', '启用会战')
-async def version_select(bot, ev: CQEvent):
+
+@sv.on_prefix(*L["CMD_SELECT_VERSION"])
+async def select_version(bot, ev: CQEvent):
     gid = ev.group_id
     arg = ev.message.extract_plain_text()
     svs = Service.get_loaded_services()
     cbsvs = {
-        'v2': svs.get('clanbattle'),
-        'v3': svs.get('clanbattlev3'),
-        'v4': svs.get('clanbattlev4'),
+        L["VERSION_OPEN_SOURCE"]: svs.get('clanbattle'),
+        L["VERSION_CLOSED_SOURCE"]: svs.get('clanbattlev3'),
+        L["VERSION_CLOSED_SOURCE_WEB"]: svs.get('clanbattlev4'),
+        L["VERSION_TI"]: svs.get('clanbattle_Ti'),
     }
     if arg not in cbsvs:
-        await bot.finish(ev, help_str)
+        await bot.finish(ev, HELP_DESC)
     if not priv.check_priv(ev, priv.ADMIN):
-        await bot.finish(ev, '只有*群管理*和*群主*才能切换会战管理版本')
+        await bot.finish(ev, L["INFO_SELECT_VERSION_PERMISSION_DENIED"])
     if not cbsvs[arg]:
-        await bot.finish(ev, f'本bot未实装clanbattle{arg}，请加入Hoshinoのお茶会(787493356)体验！')
+        await bot.finish(ev, L["INFO_SELECT_VERSION_MODULE_MISSING"].format(arg))
     for k, v in cbsvs.items():
         v.set_enable(gid) if k == arg else v.set_disable(gid)
-    await bot.send(ev, f'已启用clanbattle{arg}\n{cbsvs[arg].help}')
+    await bot.send(ev, L["INFO_SELECT_VERSION_SUCCESS"].format(arg, cbsvs[arg].help))
