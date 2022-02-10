@@ -1,6 +1,7 @@
 {
     "zh-CN": {
         "VERSION_TI": "Ti-v0.1-alpha",
+        "VERSION_TI_SHORT": "Ti",
         "VERSION_OPEN_SOURCE": "v2",
         "VERSION_CLOSED_SOURCE": "v3",
         "VERSION_CLOSED_SOURCE_WEB": "v4",
