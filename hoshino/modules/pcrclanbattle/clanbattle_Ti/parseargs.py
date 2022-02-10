@@ -61,7 +61,7 @@ class ParseArgs(object):
                 raise err.append(self.usage)
             except Exception:
                 tip = L["STARTS_WITH"].format(
-                    code) if code else '' + holder.tip or L["PARAMETER"]
+                    code) if code else '' + holder.tips or L["PARAMETER"]
                 msg = L["CORRECT_PARAMETER_REQUIRED"].format(tip)
                 raise ParseError(msg, self.usage)
             res.setdefault(value)
@@ -71,7 +71,7 @@ class ParseArgs(object):
             if code not in res:
                 if holder.default is None:
                     tip = L["STARTS_WITH"].format(code) if code else ''
-                    tip += holder.tip or L["PARAMETER"]
+                    tip += holder.tips or L["PARAMETER"]
                     raise ParseError(
                         L["MISSING_PARAMETER_REQUIRED"].format(tip))
 

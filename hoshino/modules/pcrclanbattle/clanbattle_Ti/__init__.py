@@ -77,44 +77,4 @@ def cb_cmd(name, parser: ParseArgs) -> Callable:
 # Import commands
 from .cmdcollections import *
 from .union_run import union_run
-
-
-QUICK_START = f'''
-============================================
-- {L["MOUDLE_NAME"]}{L["VERSION"]} {L["QUICK_START"]} -
-============================================
-【必读事项】
-{L["CAUTIONS"]}
-【公会注册】
-{L["USAGE_ADD_CLAN"]}
-【注册成员】
-{L["USAGE_ADD_MEMBER"]}
-【报刀】
-{L["USAGE_ADD_RUN"]}
-{L["USAGE_ADD_RUN_TAIL"]}
-{L["USAGE_ADD_RUN_LEFTOVER"]}
-{L["USAGE_ADD_RUN_LOST"]}
-【删刀】
-{L["USAGE_REMOVE_RUN"]}
-【预约Boss】
-{L["USAGE_SUBSCRIBE"]}
-{L["USAGE_UNSUBSCRIBE"]}
-【锁定Boss】
-{L["USAGE_LOCK_BOSS"]}
-{L["USAGE_UNLOCK_BOSS"]}
-{L["USAGE_LOCK_BOSS_AHEAD"]}
-'''.rstrip()
-
-
-@on_command(L["CMD_HELP"], aliases=L["CMD_HELP_ALIAS"], only_to_me=False)
-async def cb_help(session: CommandSession):
-    await session.send(QUICK_START, at_sender=True)
-    doc1 = MessageSegment.share(url='https://github.com/PengboSong/HoshinoBot/hoshino/modules/pcrclanbattle_update/README.md',
-                                title=L["MODULE_NAME"] + L["VERSION"],
-                                content=L["MANUAL"])
-    await session.send(doc1)
-    doc2 = MessageSegment.share(url='https://github.com/Ice-Cirno/HoshinoBot/wiki/%E4%BC%9A%E6%88%98%E7%AE%A1%E7%90%86v2',
-                                title=L["MODULE_NAME"] +
-                                    L["OPEN_SOURCE_VERSION"],
-                                content=L["MANUAL"])
-    await session.send(doc2)
+from .help_doc import help_doc

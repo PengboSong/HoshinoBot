@@ -49,7 +49,7 @@ def _check_admin(ctx: Context_T, tip: str = ''):
 
 
 @cb_cmd(L["CMD_ADD_CLAN"],
-        ParseArgs(usagekw=L["USAGE_ADD_CLAN"], arg_dict={
+        ParseArgs(usagekw=L["USAGE_ADD_CLAN"], argdict={
             'N': ArgHolder(dtype=str, tips=L["TIP_CLAN"]),
             'S': ArgHolder(dtype=check_server_code, tips=L["TIP_SERVER_CODE"])
         }))
@@ -81,7 +81,7 @@ async def list_clan(bot: NoneBot, ctx: Context_T, args: ParseResult):
 
 
 @cb_cmd(L["CMD_ADD_MEMBER"],
-        ParseArgs(usagekw=L["USAGE_ADD_MEMBER"], arg_dict={
+        ParseArgs(usagekw=L["USAGE_ADD_MEMBER"], argdict={
             '': ArgHolder(dtype=str, default='', tips=L["TIP_NICKNAME"]),
             '@': ArgHolder(dtype=int, default=0, tips=L["TIP_QQ_NUMBER"])}))
 async def add_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
@@ -128,7 +128,7 @@ async def list_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
 
 @cb_cmd(L["CMD_REMOVE_MEMBER"],
         ParseArgs(usagekw=L["USAGE_REMOVE_MEMBER"],
-                  arg_dict={'@': ArgHolder(dtype=int, default=0, tips=L["TIP_QQ_NUMBER"])}))
+                  argdict={'@': ArgHolder(dtype=int, default=0, tips=L["TIP_QQ_NUMBER"])}))
 async def remove_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
     bm = ClanBattleManager(ctx['group_id'])
     uid = args['@'] or args.at or ctx['user_id']
