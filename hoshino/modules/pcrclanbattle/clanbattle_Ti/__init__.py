@@ -3,6 +3,7 @@
 # Current Version: v2-pbsong-ver0.1
 
 from .cmdcollections import *
+from .union_run import union_run
 from hoshino import Service, util
 from hoshino.typing import *
 from nonebot import on_command

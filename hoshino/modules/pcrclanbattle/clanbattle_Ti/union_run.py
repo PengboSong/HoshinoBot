@@ -2,20 +2,20 @@ from hoshino import util
 from nonebot import NoneBot
 from nonebot.typing import Context_T
 
-from . import sv, cb_cmd
+from . import cb_cmd
 from .argtype import check_damage
 from .parseargs import ArgHolder, ParseArgs, ParseResult
-from .exceptions import ParseError
 
 lang = util.load_config(__file__)["LANG"]
 L = util.load_localisation(__file__)[lang]
 
+
 @cb_cmd(L["CMD_UNION_RUN"],
-    ParseArgs(usagekw=L["USAGE_UNION_RUN"], argdict={
-        '': ArgHolder(dtype=check_damage, tips=L["TIP_BOSS_HP"]),
-        'A': ArgHolder(dtype=check_damage, tips=L["TIP_DAMAGE"]),
-        'B': ArgHolder(dtype=check_damage, tips=L["TIP_DAMAGE"]),
-    }))
+        ParseArgs(usagekw=L["USAGE_UNION_RUN"], argdict={
+            '': ArgHolder(dtype=check_damage, tips=L["TIP_BOSS_HP"]),
+            'A': ArgHolder(dtype=check_damage, tips=L["TIP_DAMAGE"]),
+            'B': ArgHolder(dtype=check_damage, tips=L["TIP_DAMAGE"]),
+        }))
 async def union_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
     remain_HP = args['']
     if args.A + args.B < remain_HP:

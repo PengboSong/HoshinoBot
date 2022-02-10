@@ -8,7 +8,7 @@ from nonebot import NoneBot
 from nonebot import MessageSegment as ms
 from nonebot.typing import Context_T
 
-from . import sv, cb_cmd
+from . import cb_cmd
 from .aliases import RecordFlag, SubscribeFlag
 from .argtype import check_damage, check_round, check_boss, check_server_code, check_server_name, check_subscribe_flag, int2callnum, serial2text
 from .manager import ClanBattleManager
