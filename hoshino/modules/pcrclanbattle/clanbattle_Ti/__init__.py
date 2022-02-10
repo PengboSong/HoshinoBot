@@ -1,14 +1,12 @@
 # Princess Connect Re:Dive Clan Battle Management Module
-# Refactor by pbsong
-# Current Version: v2-pbsong-ver0.1
+# Refactor by Titanium
+# Current Version: v2-Ti-ver0.1-alpha
 
-from .cmdcollections import *
-from .union_run import union_run
 from hoshino import Service, util
 from hoshino.typing import *
 from nonebot import on_command
 
-from .parseargs import ArgParser
+from .parseargs import ParseArgs
 from .exceptions import ClanBattleError, DatabaseError
 
 
@@ -16,10 +14,9 @@ lang = util.load_config(__file__)["LANG"]
 L = util.load_localisation(__file__)[lang]   # Short of localisation
 
 
-sv = Service('clanbattle', help_=L["MODULE_NAME"] +
-             L["VERSION"], bundle='PCR Clan Battle')
+sv = Service('clanbattle-Ti', help_=L["MODULE_NAME"] + L["VERSION"], visible=True)
 
-_registry: Dict[str, Tuple[Callable, ArgParser]] = {}
+_registry: Dict[str, Tuple[Callable, ParseArgs]] = {}
 
 
 @sv.on_message('group')
@@ -59,7 +56,7 @@ async def _clanbattle_bus(bot, ctx):
             await bot.send(ctx, L["UNEXPECTED_ERROR"].format(err.message) + L["SORRY"], at_sender=True)
 
 
-def cb_cmd(name, parser: ArgParser) -> Callable:
+def cb_cmd(name, parser: ParseArgs) -> Callable:
     if isinstance(name, str):
         name = (name, )
     if not isinstance(name, Iterable):
@@ -75,6 +72,11 @@ def cb_cmd(name, parser: ArgParser) -> Callable:
                 _registry[n] = (func, parser)
         return func
     return deco
+
+
+# Import commands
+from .cmdcollections import *
+from .union_run import union_run
 
 
 QUICK_START = f'''

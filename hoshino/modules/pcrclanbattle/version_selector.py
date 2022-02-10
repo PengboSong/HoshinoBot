@@ -21,7 +21,7 @@ HELP_DESC = f'''
 {L["DESC_CLOSED_SOURCE_WEB"]}
 {L["DESC_NEW_CLAN_BATTLE"]}
 
-【{L["USAGE_SELECT_VERSION"]}{L["VERSION_TI_SHORT"]}】
+【{L["USAGE_SELECT_VERSION"]}{L["VERSION_TI"]}】
 {L["DESC_TI"]}
 {L["DESC_OLD_CLAN_BATTLE"]}
 '''.strip()
@@ -36,7 +36,7 @@ async def select_version(bot, ev: CQEvent):
         L["VERSION_OPEN_SOURCE"]: svs.get('clanbattle'),
         L["VERSION_CLOSED_SOURCE"]: svs.get('clanbattlev3'),
         L["VERSION_CLOSED_SOURCE_WEB"]: svs.get('clanbattlev4'),
-        L["VERSION_TI_SHORT"]: svs.get('clanbattle_Ti'),
+        L["VERSION_TI"]: svs.get('clanbattle-Ti'),
     }
     if arg not in cbsvs:
         await bot.finish(ev, HELP_DESC)
@@ -45,5 +45,6 @@ async def select_version(bot, ev: CQEvent):
     if not cbsvs[arg]:
         await bot.finish(ev, L["INFO_SELECT_VERSION_MODULE_MISSING"].format(arg))
     for k, v in cbsvs.items():
-        v.set_enable(gid) if k == arg else v.set_disable(gid)
+        if v is not None:
+            v.set_enable(gid) if k == arg else v.set_disable(gid)
     await bot.send(ev, L["INFO_SELECT_VERSION_SUCCESS"].format(arg, cbsvs[arg].help))
