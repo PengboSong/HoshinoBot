@@ -78,7 +78,7 @@ PRIMARY KEY (groupid, clanid)''')
             try:
                 conn.execute(sql, self.unpack_claninfo(claninfo))
             except sqlite3.DatabaseError as err:
-                logger.error("[ClanDB.add Failed] " + err)
+                logger.error("[ClanDB.add Failed] " + str(err))
                 raise DatabaseError(L["ADD_CLAN_FAILED"])
     
     def remove(self, groupid : int, clanid : int):
@@ -87,7 +87,7 @@ PRIMARY KEY (groupid, clanid)''')
             try:
                 conn.execute(sql, (groupid, clanid))
             except sqlite3.DatabaseError as err:
-                logger.error("[ClanDB.remove Failed] " + err)
+                logger.error("[ClanDB.remove Failed] " + str(err))
                 raise DatabaseError(L["REMOVE_CLAN_FAILED"])
     
     def modify(self, claninfo: Dict):
@@ -97,7 +97,7 @@ PRIMARY KEY (groupid, clanid)''')
                 paras = self.unpack_claninfo(claninfo)
                 conn.execute(sql, (*paras[2:], *paras[:2]))
             except sqlite3.DatabaseError as err:
-                logger.error("[ClanDB.modify Failed] " + err)
+                logger.error("[ClanDB.modify Failed] " + str(err))
                 raise DatabaseError(L["MODIFY_CLAN_FAILED"])
     
     def find_one(self, groupid : int, clanid : int) -> Dict:
@@ -107,7 +107,7 @@ PRIMARY KEY (groupid, clanid)''')
                 record = conn.execute(sql, (groupid, clanid)).fetchone()
                 return self.pack_claninfo(record)
             except sqlite3.DatabaseError as err:
-                logger.error("[ClanDB.find_one Failed] " + err)
+                logger.error("[ClanDB.find_one Failed] " + str(err))
                 raise DatabaseError(L["SEARCH_CLAN_FAILED"])
     
     def find_all(self) -> List[Dict]:
@@ -117,7 +117,7 @@ PRIMARY KEY (groupid, clanid)''')
                 records = conn.execute(sql).fetchall()
                 return [self.pack_claninfo(record) for record in records]
             except sqlite3.DatabaseError as err:
-                logger.error("[ClanDB.find_all Failed] " + err)
+                logger.error("[ClanDB.find_all Failed] " + str(err))
                 raise DatabaseError(L["SEARCH_CLAN_FAILED"])
     
     def find_by_groupid(self, groupid : int) -> List[Dict]:
@@ -128,7 +128,7 @@ PRIMARY KEY (groupid, clanid)''')
                 records = conn.execute(sql, (groupid,)).fetchall()
                 return [self.pack_claninfo(record) for record in records]
             except sqlite3.DatabaseError as err:
-                logger.error("[ClanDB.find_by_groupid Failed] " + err)
+                logger.error("[ClanDB.find_by_groupid Failed] " + str(err))
                 raise DatabaseError(L["SEARCH_CLAN_FAILED"])
 
 
@@ -193,7 +193,7 @@ PRIMARY KEY (userid, alt)''')
             try:
                 conn.execute(sql, self.unpack_memberinfo(memberinfo))
             except sqlite3.DatabaseError as err:
-                logger.error("[MemberDB.add Failed] " + err)
+                logger.error("[MemberDB.add Failed] " + str(err))
                 raise DatabaseError(L["ADD_MEMBER_FAILED"])
     
     def remove(self, userid : int, alt : int):
@@ -202,7 +202,7 @@ PRIMARY KEY (userid, alt)''')
             try:
                 conn.execute(sql, (userid, alt))
             except sqlite3.DatabaseError as err:
-                logger.error("[MemberDB.remove Failed] " + err)
+                logger.error("[MemberDB.remove Failed] " + str(err))
                 raise DatabaseError(L["REMOVE_MEMBER_FAILED"])
     
     def modify(self, memberinfo: Dict):
@@ -212,7 +212,7 @@ PRIMARY KEY (userid, alt)''')
                 paras = self.unpack_memberinfo(memberinfo)
                 conn.execute(sql, (*paras[2:], *paras[:2]))
             except sqlite3.DatabaseError as err:
-                logger.error("[MemberDB.modify Failed] " + err)
+                logger.error("[MemberDB.modify Failed] " + str(err))
                 raise DatabaseError(L["MODIFY_MEMBER_FAILED"])
     
     def find_one(self, userid : int, alt : int):
@@ -222,7 +222,7 @@ PRIMARY KEY (userid, alt)''')
                 record = conn.execute(sql, (userid, alt)).fetchone()
                 return self.pack_memberinfo(record)
             except sqlite3.DatabaseError as err:
-                logger.error("[MemberDB.find_one Failed] " + err)
+                logger.error("[MemberDB.find_one Failed] " + str(err))
                 raise DatabaseError(L["SEARCH_MEMBER_FAILED"])
     
     def find_all(self) -> List:
@@ -232,7 +232,7 @@ PRIMARY KEY (userid, alt)''')
                 records = conn.execute(sql).fetchall()
                 return [self.pack_memberinfo(record) for record in records]
             except sqlite3.DatabaseError as err:
-                logger.error("[MemberDB.find_all Failed] " + err)
+                logger.error("[MemberDB.find_all Failed] " + str(err))
                 raise DatabaseError(L["SEARCH_MEMBER_FAILED"])
     
     def find_by(self, userid : Optional[int] = None, groupid : Optional[int] = None, clanid : Optional[int] = None) -> List:
@@ -245,7 +245,7 @@ PRIMARY KEY (userid, alt)''')
                     records = conn.execute(sql, paras).fetchall()
                     return [self.pack_memberinfo(record) for record in records]
                 except sqlite3.DatabaseError as err:
-                    logger.error("[MemberDB.find_by Failed] " + err)
+                    logger.error("[MemberDB.find_by Failed] " + str(err))
                     raise DatabaseError(L["SEARCH_MEMBER_FAILED"])
         else:
             return self.find_all()
@@ -260,7 +260,7 @@ PRIMARY KEY (userid, alt)''')
                     cursor = conn.execute(sql, paras)
                     return cursor.rowcount
                 except sqlite3.DatabaseError as err:
-                    logger.error("[MemberDB.remove_by Failed] " + err)
+                    logger.error("[MemberDB.remove_by Failed] " + str(err))
                     raise DatabaseError(L["REMOVE_MEMBER_FAILED"])
         else:
             raise DatabaseError(L["WRONG_FILTER_MEMBER_CONDITION"])
@@ -273,7 +273,7 @@ class ClanBattleDB(PCRsqlite):
         
         The table is built with the following columns:
         Columns   Description              Type        NotNull   PK
-        rid       Record ID for each run   INT         True      True
+        rid       Record ID for each run   INTEGER     True      True
         userid    QQ user number           INT         True      False
         alt       User group chat ID       INT         True      False
         time      Record submit time       TIMESTAMP   True      False
@@ -288,7 +288,7 @@ class ClanBattleDB(PCRsqlite):
             table=tablename,
             columns="rid, userid, alt, time, round, boss, damage, flag",
             fields='''
-rid     INT       PRIMARY KEY AUTOINCREMENT,
+rid     INTEGER   PRIMARY KEY AUTOINCREMENT,
 userid  INT       NOT NULL,
 alt     INT       NOT NULL,
 time    TIMESTAMP NOT NULL,
@@ -312,9 +312,9 @@ flag    INT       NOT NULL''')
     
     @staticmethod
     def unpack_battleinfo(battleinfo : Dict) -> Tuple:
-        if battleinfo:
-            rid = battleinfo["rid"] if "rid" in battleinfo else 0
-            return (rid, battleinfo["userid"], battleinfo["alt"], battleinfo["time"], battleinfo["round"], battleinfo["boss"], battleinfo["damage"], battleinfo["flag"])
+        if (binfo := battleinfo):
+            rid = binfo["rid"] if "rid" in binfo else 0
+            return (rid, binfo["userid"], binfo["alt"], binfo["time"], binfo["round"], binfo["boss"], binfo["damage"], binfo["flag"])
         else:
             return ()
 
@@ -337,7 +337,7 @@ flag    INT       NOT NULL''')
             try:
                 conn.execute(sql, self.unpack_battleinfo(battleinfo)[1:])
             except sqlite3.DatabaseError as err:
-                logger.error("[ClanBattleDB.add Failed] " + err)
+                logger.error("[ClanBattleDB.add Failed] " + str(err))
                 raise DatabaseError(L["ADD_RECORD_FAILED"])
     
     def remove(self, rid : int):
@@ -346,7 +346,7 @@ flag    INT       NOT NULL''')
             try:
                 conn.execute(sql, (rid,))
             except sqlite3.DatabaseError as err:
-                logger.error("[ClanBattleDB.remove Failed] " + err)
+                logger.error("[ClanBattleDB.remove Failed] " + str(err))
                 raise DatabaseError(L["REMOVE_RECORD_FAILED"])
     
     def modify(self, battleinfo: Dict):
@@ -356,7 +356,7 @@ flag    INT       NOT NULL''')
                 paras = self.unpack_battleinfo(battleinfo)
                 conn.execute(sql, (*paras[1:], paras[0]))
             except sqlite3.DatabaseError as err:
-                logger.error("[ClanBattleDB.modify Failed] " + err)
+                logger.error("[ClanBattleDB.modify Failed] " + str(err))
                 raise DatabaseError(L["MODIFY_RECORD_FAILED"])
     
     def find_one(self, rid : int):
@@ -366,17 +366,17 @@ flag    INT       NOT NULL''')
                 record = conn.execute(sql, (rid,)).fetchone()
                 return self.pack_battleinfo(record)
             except sqlite3.DatabaseError as err:
-                logger.error("[ClanBattleDB.find_one Failed] " + err)
+                logger.error("[ClanBattleDB.find_one Failed] " + str(err))
                 raise DatabaseError(L["SEARCH_RECORD_FAILED"])
     
     def find_all(self) -> List:
-        sql = f"SELECT {self._columns} FROM {self._table}"
+        sql = f"SELECT {self._columns} FROM {self._table} ORDER BY round, boss, rid"
         with self._connect() as conn:
             try:
                 records = conn.execute(sql).fetchall()
                 return [self.pack_battleinfo(record) for record in records]
             except sqlite3.DatabaseError as err:
-                logger.error("[ClanBattleDB.find_all Failed] " + err)
+                logger.error("[ClanBattleDB.find_all Failed] " + str(err))
                 raise DatabaseError(L["SEARCH_RECORD_FAILED"])
     
     def find_by(self, userid : Optional[int] = None, alt : Optional[int] = None, order_by_user: bool = False) -> List:
@@ -384,13 +384,13 @@ flag    INT       NOT NULL''')
         sql, paras = self.gen_condition_sql(userid, alt)
         order = "userid, alt, round, boss, rid" if order_by_user else "round, boss, rid"
         if len(paras) != 0:
-            sql = f"SELECT {self._columns} FROM {self._table} WHERE {sql} ORDER_BY {order}"
+            sql = f"SELECT {self._columns} FROM {self._table} WHERE {sql} ORDER BY {order}"
             with self._connect() as conn:
                 try:
                     records = conn.execute(sql, paras).fetchall()
                     return [self.pack_battleinfo(record) for record in records]
                 except sqlite3.DatabaseError as err:
-                    logger.error("[ClanBattleDB.find_by Failed] " + err)
+                    logger.error("[ClanBattleDB.find_by Failed] " + str(err))
                     raise DatabaseError(L["SEARCH_RECORD_FAILED"])
         else:
             return self.find_all()
@@ -402,7 +402,7 @@ class SubscribeDB(PCRsqlite):
         
         The table is built with the following columns:
         Columns   Description              Type        NotNull   PK
-        sid       Subscribe ID             INT         True      True
+        sid       Subscribe ID             INTEGER     True      True
         userid    QQ user number           INT         True      False
         alt       User group chat ID       INT         True      False
         time      Subscribe submit time    TIMESTAMP   True      False
@@ -418,7 +418,7 @@ class SubscribeDB(PCRsqlite):
             table=tablename,
             columns="sid, userid, alt, time, round, boss, flag, msg",
             fields='''
-sid     INT       PRIMARY KEY AUTOINCREMENT,
+sid     INTEGER   PRIMARY KEY AUTOINCREMENT,
 userid  INT       NOT NULL,
 alt     INT       NOT NULL,
 time    TIMESTAMP NOT NULL,
@@ -442,9 +442,11 @@ msg     TEXT      NOT NULL''')
     
     @staticmethod
     def unpack_subscribeinfo(subscribeinfo : Dict) -> Tuple:
-        if subscribeinfo:
-            sid = subscribeinfo["sid"] if "sid" in subscribeinfo else 0
-            return (sid, subscribeinfo["userid"], subscribeinfo["alt"], subscribeinfo["time"], subscribeinfo["round"], subscribeinfo["boss"], subscribeinfo["flag"], subscribe["msg"])
+        if (sinfo := subscribeinfo):
+            sid = sinfo["sid"] if "sid" in sinfo else 0
+            return (sid, sinfo["userid"], sinfo["alt"], sinfo["time"], sinfo["round"], sinfo["boss"], sinfo["flag"], sinfo["msg"])
+        else:
+            return ()
     
     @staticmethod
     def gen_condition_sql(userid : Optional[int] = None, alt : Optional[int] = None, round_ : Optional[int] = None, boss : Optional[int] = None, flag : Optional[int] = None) -> Tuple[str, Tuple]:
@@ -473,7 +475,7 @@ msg     TEXT      NOT NULL''')
             try:
                 conn.execute(sql, self.unpack_subscribeinfo(subscribeinfo)[1:])
             except sqlite3.DatabaseError as err:
-                logger.error("[SubscribeDB.add Failed] " + err)
+                logger.error("[SubscribeDB.add Failed] " + str(err))
                 raise DatabaseError(L["ADD_SUBSCRIBE_FAILED"])
     
     def remove(self, sid : int):
@@ -482,7 +484,7 @@ msg     TEXT      NOT NULL''')
             try:
                 conn.execute(sql, (sid,))
             except sqlite3.DatabaseError as err:
-                logger.error("[SubscribeDB.remove Failed] " + err)
+                logger.error("[SubscribeDB.remove Failed] " + str(err))
                 raise DatabaseError(L["REMOVE_SUBSCRIBE_FAILED"])
     
     def modify(self, subscribeinfo: Dict):
@@ -492,7 +494,7 @@ msg     TEXT      NOT NULL''')
                 paras = self.unpack_battleinfo(subscribeinfo)
                 conn.execute(sql, (*paras[1:], paras[0]))
             except sqlite3.DatabaseError as err:
-                logger.error("[SubscribeDB.modify Failed] " + err)
+                logger.error("[SubscribeDB.modify Failed] " + str(err))
                 raise DatabaseError(L["MODIFY_SUBSCRIBE_FAILED"])
     
     def find_one(self, sid : int):
@@ -502,7 +504,7 @@ msg     TEXT      NOT NULL''')
                 record = conn.execute(sql, (sid,)).fetchone()
                 return self.pack_subscribeinfo(record)
             except sqlite3.DatabaseError as err:
-                logger.error("[SubscribeDB.find_one Failed] " + err)
+                logger.error("[SubscribeDB.find_one Failed] " + str(err))
                 raise DatabaseError(L["SEARCH_SUBSCRIBE_FAILED"])
     
     def find_all(self) -> List:
@@ -512,7 +514,7 @@ msg     TEXT      NOT NULL''')
                 records = conn.execute(sql).fetchall()
                 return [self.pack_subscribeinfo(record) for record in records]
             except sqlite3.DatabaseError as err:
-                logger.error("[SubscribeDB.find_all Failed] " + err)
+                logger.error("[SubscribeDB.find_all Failed] " + str(err))
                 raise DatabaseError(L["SEARCH_SUBSCRIBE_FAILED"])
     
     def find_by(self, userid : Optional[int] = None, alt : Optional[int] = None, round_ : Optional[int] = None, boss : Optional[int] = None, flag : Optional[int] = None) -> List:
@@ -525,7 +527,7 @@ msg     TEXT      NOT NULL''')
                     records = conn.execute(sql, paras).fetchall()
                     return [self.pack_subscribeinfo(record) for record in records]
                 except sqlite3.DatabaseError as err:
-                    logger.error("[SubscribeDB.find_by Failed] " + err)
+                    logger.error("[SubscribeDB.find_by Failed] " + str(err))
                     raise DatabaseError(L["SEARCH_SUBSCRIBE_FAILED"])
     
     def remove_by(self, userid : Optional[int] = None, alt : Optional[int] = None, round_ : Optional[int] = None, boss : Optional[int] = None, flag : Optional[int] = None):
@@ -538,7 +540,7 @@ msg     TEXT      NOT NULL''')
                     cursor = conn.execute(sql, paras)
                     return cursor.rowcount
                 except sqlite3.DatabaseError as err:
-                    logger.error("[SubscribeDB.remove_by Failed] " + err)
+                    logger.error("[SubscribeDB.remove_by Failed] " + str(err))
                     raise DatabaseError(L["REMOVE_SUBSCRIBE_FAILED"])
         else:
             raise DatabaseError(L["WRONG_FILTER_SUBSCRIBE_CONDITION"])

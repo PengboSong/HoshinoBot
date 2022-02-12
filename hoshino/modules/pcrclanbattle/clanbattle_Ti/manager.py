@@ -115,16 +115,16 @@ class ClanBattleManager(object):
 
     # -*- CLAN OPERATIONS -*-
     def add_clan(self, clanid: int, name: str, server: int):
-        return self.clan.add(ClanDB.pack_claninfo(self.groupid, clanid, name, server))
+        return self.clan.add(ClanDB.pack_claninfo((self.groupid, clanid, name, server)))
 
     def remove_clan(self, clanid: int):
         return self.clan.remove(self.groupid, clanid)
 
     def modify_clan(self, clanid: int, name: str, server: int):
-        return self.clan.modify(ClanDB.pack_claninfo(self.groupid, clanid, name, server))
+        return self.clan.modify(ClanDB.pack_claninfo((self.groupid, clanid, name, server)))
 
     def fetch_clan(self, clanid: int):
-        return self.clan.find_one(clanid)
+        return self.clan.find_one(self.groupid, clanid)
 
     def check_clan(self, clanid: int) -> bool:
         return True if self.fetch_clan(clanid) else False
@@ -141,7 +141,7 @@ class ClanBattleManager(object):
 
     # -*- MEMBER OPERATIONS -*-
     def add_member(self, userid: int, alt: int, name: str, clanid: int):
-        return self.members.add(MemberDB.pack_memberinfo(userid, alt, name, self.groupid, clanid))
+        return self.members.add(MemberDB.pack_memberinfo((userid, alt, name, self.groupid, clanid)))
 
     def remove_member(self, userid: int, alt: int):
         return self.members.remove(userid, alt)
@@ -150,7 +150,7 @@ class ClanBattleManager(object):
         return self.members.remove_by(groupid=self.groupid, clanid=clanid)
 
     def modify_member(self, userid: int, alt: int, name: str, clanid: int):
-        return self.members.modify(MemberDB.pack_memberinfo(userid, alt, name, self.groupid, clanid))
+        return self.members.modify(MemberDB.pack_memberinfo((userid, alt, name, self.groupid, clanid)))
 
     def fetch_member(self, userid: int, alt: int):
         return member if (member := self.members.find_one(userid, alt)) and member["groupid"] == self.groupid else None
@@ -413,7 +413,7 @@ class ClanBattleManager(object):
         return self.conditional_filter_subscribes(
             subscribes_list=self.list_subscribes(clanid, time),
             rcode=rcode, bcode=bcode,
-            flags=(SubscribeFlag.LOCKED.value))
+            flags=(SubscribeFlag.LOCKED.value,))
 
     def check_boss_locked(self, clanid: int, time: datetime, rcode: int, bcode: int) -> bool:
         """Check whether target boss is locked"""

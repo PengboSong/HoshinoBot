@@ -46,12 +46,12 @@ class ParseArgs(object):
                 para = arg[1:]
             # Raw parameter
             elif '' in self.argdict:
+                code = ''
                 holder = self.argdict['']
                 para = arg
             else:
                 raise ParseError(L["UNKNOWN_HOLDER"], self.usage)
 
-            value = None
             try:
                 if holder.dtype == str:
                     value = util.filt_message(holder.dtype(para))
@@ -74,6 +74,8 @@ class ParseArgs(object):
                     tip += holder.tips or L["PARAMETER"]
                     raise ParseError(
                         L["MISSING_PARAMETER_REQUIRED"].format(tip))
+                else:
+                    res[code] = holder.default
 
         # Parse at target QQ number
         res['at'] = 0

@@ -54,7 +54,7 @@ def _check_admin(ctx: Context_T, tip: str = ''):
             'S': ArgHolder(dtype=check_server_code, tips=L["TIP_SERVER_CODE"])
         }))
 async def add_clan(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    _check_admin(ctx=ctx)
+    _check_admin(ctx)
     bm = ClanBattleManager(ctx['group_id'])
     if bm.check_clan(1):
         bm.modify_clan(clanid=1, name=args.N, server=args.S)
@@ -68,7 +68,7 @@ async def add_clan(bot: NoneBot, ctx: Context_T, args: ParseResult):
         ParseArgs(usagekw=L["USAGE_LIST_CLAN"]))
 async def list_clan(bot: NoneBot, ctx: Context_T, args: ParseResult):
     bm = ClanBattleManager(ctx['group_id'])
-    clans = bm.list_clan()
+    clans = bm.list_clans()
     if len(clans) != 0:
         msg = [L["INFO_CLAN_TITLE"]]
         for clan in clans:
@@ -90,7 +90,7 @@ async def add_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
     uid = args['@'] or args.at or ctx['user_id']
     name = args['']
     if uid != ctx['user_id']:
-        _check_admin(ctx=ctx, tip=L["TIP_ADD_OTHER_MEMBER"])
+        _check_admin(ctx, tip=L["TIP_ADD_OTHER_MEMBER"])
         # Check whether member is in this group chat
         try:
             await bot.get_group_member_info(self_id=ctx['self_id'], group_id=bm.groupid, user_id=uid)
@@ -116,10 +116,9 @@ async def list_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
     _check_clan(bm)
     members = bm.list_members(clanid=1)
     if (members_count := len(members)):
-        msg = [L["INFO_MEMBER_TITLE"].format(members_count)]
-        for i, member in enumerate(members):
-            msg.append("{0:2d}/30 | {1:<12} | {2}".format(i,
-                       serial2text(member["userid"]), member["name"]))
+        msg = ['', L["INFO_MEMBER_TITLE"].format(members_count)]
+        for idx, member in enumerate(members):
+            msg.append(f"{1 + idx:>2d}/30 | {serial2text(member['userid']):<12} | {member['name']}")
         await bot.send(ctx, '\n'.join(msg), at_sender=True)
     else:
         raise NotFoundError(L["ERROR_EMPTY_CLAN"].format(
@@ -158,11 +157,10 @@ async def batch_add_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
     _check_clan(bm)
     _check_admin(ctx)
     try:
-        mlist = await bot.get_group_member_list(self_id=ctx['self_id'], group_id=bm.group)
+        mlist = await bot.get_group_member_list(self_id=ctx['self_id'], group_id=bm.groupid)
     except ActionFailed:
         raise ClanBattleError(
             L["ERROR_GET_MEMBER_LIST_FAILED"].format(L["USAGE_ADD_MEMBER"]))
-    BATCH_ADD_MEMBER_LIMIT = 50
     if len(mlist) > config["BATCH_ADD_MEMBER_LIMIT"]:
         raise ClanBattleError(
             L["ERROR_MEMBER_LIST_TOO_LONG"].format(BATCH_ADD_MEMBER_LIMIT))
@@ -172,7 +170,7 @@ async def batch_add_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
     for m in mlist:
         if m['user_id'] != self_id:
             try:
-                bm.add_member(userid=m['user_id'], alt=bm.group, name=m['card']
+                bm.add_member(userid=m['user_id'], alt=bm.groupid, name=m['card']
                               or m['nickname'] or str(m['user_id']), clanid=1)
                 succ += 1
             except DatabaseError:
@@ -523,7 +521,7 @@ async def show_progress(bot: NoneBot, ctx: Context_T, args: ParseResult):
     total_hp, score_rate = bm.get_boss_info(
         current_round, current_boss, server)
     tier = bm.current_tier(current_round, server)
-    msg = [_gen_progress_text(
+    msg = ['', _gen_progress_text(
         clan["name"], tier, current_round, current_boss, remain_hp, total_hp, score_rate)]
     if bm.check_boss_locked(cid, now, current_round, current_boss):
         locked = bm.list_subscribes_locked(
@@ -555,7 +553,7 @@ async def process_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
 
     msg = []
     run_list = bm.list_run_by_user_day(
-        userid=member["userid"], alt=member["alt"], time=now)
+        userid=member["userid"], alt=member["alt"], time=now, hourdelta=bm.UTC_delta(clan["server"]))
     # If the previous run is tail, this run must be leftover
     if len(run_list) > 0 and run_list[-1]['flag'] == RecordFlag.TAIL.value:
         flag = RecordFlag.LEFTOVER.value
@@ -609,12 +607,12 @@ async def process_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
             'B': ArgHolder(dtype=check_boss, default=0, tips=L["TIP_BOSS"]),
             'D': ArgHolder(dtype=int, default=0, tips=L["TIP_DATE_DELTA"])}))
 async def add_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    await process_run(bot, ctx, args={
+    await process_run(bot, ctx, args=ParseResult({
         "round": args.R, "boss": args.B, "damage": args.get(''),
         "userid": args['@'] or args.at or ctx["user_id"],
         "alt": ctx["group_id"],
         "flag": RecordFlag.NORMAL.value,
-        "dayoffset": args.get('D', 0)})
+        "dayoffset": args.get('D', 0)}))
 
 
 @cb_cmd(L["CMD_ADD_RUN_TAIL"],
@@ -624,11 +622,11 @@ async def add_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
             'R': ArgHolder(dtype=check_round, default=0, tips=L["TIP_ROUND"]),
             'B': ArgHolder(dtype=check_boss, default=0, tips=L["TIP_BOSS"])}))
 async def add_run_tail(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    await process_run(bot, ctx, args={
+    await process_run(bot, ctx, args=ParseResult({
         "round": args.R, "boss": args.B, "damage": args.get(''),
         "userid": args['@'] or args.at or ctx["user_id"],
         "alt": ctx["group_id"],
-        "flag": RecordFlag.TAIL.value})
+        "flag": RecordFlag.TAIL.value}))
 
 
 @cb_cmd(L["CMD_ADD_RUN_LEFTOVER"],
@@ -638,11 +636,11 @@ async def add_run_tail(bot: NoneBot, ctx: Context_T, args: ParseResult):
             'R': ArgHolder(dtype=check_round, default=0, tips=L["TIP_ROUND"]),
             'B': ArgHolder(dtype=check_boss, default=0, tips=L["TIP_BOSS"])}))
 async def add_run_leftover(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    await process_run(bot, ctx, args={
+    await process_run(bot, ctx, args=ParseResult({
         "round": args.R, "boss": args.B, "damage": args.get(''),
         "userid": args['@'] or args.at or ctx["user_id"],
         "alt": ctx["group_id"],
-        "flag": RecordFlag.LEFTOVER.value})
+        "flag": RecordFlag.LEFTOVER.value}))
 
 
 @cb_cmd(L["CMD_ADD_RUN_LOST"],
@@ -651,11 +649,11 @@ async def add_run_leftover(bot: NoneBot, ctx: Context_T, args: ParseResult):
             'R': ArgHolder(dtype=check_round, default=0, tips=L["TIP_ROUND"]),
             'B': ArgHolder(dtype=check_boss, default=0, tips=L["TIP_BOSS"])}))
 async def add_run_lost(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    await process_run(bot, ctx, args={
+    await process_run(bot, ctx, args=ParseResult({
         "round": args.R, "boss": args.B, "damage": 0,
         "userid": args['@'] or args.at or ctx["user_id"],
         "alt": ctx["group_id"],
-        "flag": RecordFlag.LOST.value})
+        "flag": RecordFlag.LOST.value}))
 
 
 @cb_cmd(L["CMD_REMOVE_RUN"],

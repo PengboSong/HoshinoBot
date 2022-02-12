@@ -37,7 +37,7 @@ def convert_unit(num: Union[int, float], unit: str = '') -> int:
 
 
 def check_damage(para: str) -> int:
-    para = util.normalize_str(para)
+    para = util.normalize_str(para).strip()
     if res := reg_dint.match(para):
         v = convert_unit(res.group(1), res.group(2))
         if v > 1000000000:
@@ -48,7 +48,7 @@ def check_damage(para: str) -> int:
 
 
 def check_boss(para: str) -> int:
-    para = util.normalize_str(para)
+    para = util.normalize_str(para).strip()
     if res := reg_bcode.match(para):
         return map_numbers[res.group(1)]
     else:
@@ -56,7 +56,7 @@ def check_boss(para: str) -> int:
 
 
 def check_round(para: str) -> int:
-    para = util.normalize_str(para)
+    para = util.normalize_str(para).strip()
     if reg_rcode.match(para):
         return int(para)
     else:
@@ -64,7 +64,7 @@ def check_round(para: str) -> int:
 
 
 def check_server_code(para: str) -> int:
-    para = util.normalize_str(para)
+    para = util.normalize_str(para).strip()
     if reg_server_jp.match(para):
         return ServerCode.SERVER_JP.value
     elif reg_server_tw.match(para):
@@ -114,3 +114,4 @@ def serial2text(x: int) -> str:
     text = ''
     for digit in str(x):
         text += int2callnum(int(digit))
+    return text

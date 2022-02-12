@@ -128,7 +128,7 @@
         "INFO_REMOVE_MEMBER": "成员{0}已从公会移除",
         "INFO_CLEAR_MEMBERS": "公会{0}内成员已全部移除",
         "INFO_BATCH_ADD_MEMBER": "批量注册成员完成，成功{0}/失败{1}\n使用【{2}】指令查看当前成员列表",
-        "INFO_MEMBER_TITLE": "{0}/30 | -*-*- QQ -*-*- | 昵称",
+        "INFO_MEMBER_TITLE": "{0}/30 | - * - * - QQ - * - * - | 昵称",
         "INFO_EMPTY_CLAN": "公会{0}内已无成员",
         "INFO_PROGRESS_TEMPLATE": "{0}\n当前进度：{1}阶段{2}周目{3}王【SCOREx{4}】\nHP={5}/{6}",
         "INFO_RECORD_TEMPLATE": "记录编号R{0}：\n{1}对{2}周目{3}王造成{4}点伤害",
