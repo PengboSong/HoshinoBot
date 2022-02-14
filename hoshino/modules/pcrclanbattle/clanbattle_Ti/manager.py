@@ -403,6 +403,14 @@ class ClanBattleManager(object):
             subscribes_list=filter_res,
             flags=(SubscribeFlag.NORMAL.value, SubscribeFlag.WHOLE.value))
 
+    def list_subscribes_user_active(self, userid: int, alt: int, time: datetime, hourdelta: int, one_day_only: bool = True) -> List:
+        """List all active subscribes (including normal, whole)"""
+        filter_res = self.list_subscribes_by_user_day(
+            userid, alt, time, hourdelta) if one_day_only else self.list_subscribes_by_user(userid, alt, time)
+        return self.conditional_filter_subscribes(
+            subscribes_list=filter_res,
+            flags=(SubscribeFlag.NORMAL.value, SubscribeFlag.WHOLE.value))
+
     def list_subscribes_by_detail(self, userid: int, alt: int, time: datetime, rcode: int, bcode: int) -> List:
         """Check whether user has already subscribed target boss"""
         return self.conditional_filter_subscribes(

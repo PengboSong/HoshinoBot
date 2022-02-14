@@ -251,9 +251,9 @@ async def subscribe(bot: NoneBot, ctx: Context_T, args: ParseResult):
 async def subscribe_whole(bot: NoneBot, ctx: Context_T, args: ParseResult):
     bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
-    uid = ctx["user_id"]
     clan = _check_clan(bm)
     cid = clan["clanid"]
+    uid = ctx["user_id"]
     _check_member(bm=bm, userid=uid, alt=bm.groupid)
     round_text = serial2text(args.R)
     boss_text = int2callnum(args.B)
@@ -377,6 +377,47 @@ async def clear_subscribes(bot: NoneBot, ctx: Context_T, args: ParseResult):
     else:
         raise NotFoundError(
             L["ERROR_SUBSCRIBE_QUEUE_EMPTY"].format(round_text, boss_text))
+
+
+@cb_cmd(L["CMD_LIST_SUBSCRIBES"],
+        ParseArgs(usagekw=L["USAGE_LIST_SUBSCRIBES"]))
+async def list_subscribes(bot: NoneBot, ctx: Context_T, args: ParseResult):
+    bm = ClanBattleManager(ctx['group_id'])
+    now = datetime.now()
+    clan = _check_clan(bm)
+    subscirbes = bm.list_subscribes_active(clanid=clan["clanid"], time=now, hourdelta=bm.UTC_delta(clan["server"]))
+    msg = [L["INFO_LIST_SUBSCRIBES"].format(clan["name"], len(subscirbes))]
+    msg.append(L["INFO_SUBSCRIBE_QUEUE_TITLE"])
+    msg.extend(_gen_namelist_text(bm, subscirbes))
+    await bot.send(ctx, '\n'.join(msg), at_sender=True)
+
+
+@cb_cmd(L["CMD_LIST_USER_SUBSCRIBES"],
+        ParseArgs(usagekw=L["USAGE_LIST_USER_SUBSCRIBES"]))
+async def list_user_subscribes(bot: NoneBot, ctx: Context_T, args: ParseResult):
+    bm = ClanBattleManager(ctx['group_id'])
+    now = datetime.now()
+    clan = _check_clan(bm)
+    uid = ctx["user_id"]
+    member = _check_member(bm=bm, userid=uid, alt=bm.groupid)
+    subscirbes = bm.list_subscribes_user_active(userid=uid, alt=member["alt"], time=now, hourdelta=bm.UTC_delta(clan["server"]))
+    msg = [L["INFO_LIST_SUBSCRIBES"].format(clan["name"], len(subscirbes))]
+    msg.append(L["INFO_SUBSCRIBE_QUEUE_TITLE"])
+    msg.extend(_gen_namelist_text(bm, subscirbes))
+    await bot.send(ctx, '\n'.join(msg), at_sender=True)
+
+
+@cb_cmd(L["CMD_LIST_SUBSCRIBE_TREE"],
+        ParseArgs(usagekw=L["USAGE_LIST_SUBSCRIBE_TREE"]))
+async def list_subscribe_tree(bot: NoneBot, ctx: Context_T, args: ParseResult):
+    bm = ClanBattleManager(ctx['group_id'])
+    now = datetime.now()
+    clan = _check_clan(bm)
+    subscirbes = bm.list_subscribes(clan["clanid"], now)
+    msg = [L["INFO_LIST_SUBSCRIBES"].format(clan["name"], len(subscirbes))]
+    msg.append(L["INFO_SUBSCRIBE_QUEUE_TITLE"])
+    msg.extend(_gen_namelist_text(bm, subscirbes))
+    await bot.send(ctx, '\n'.join(msg), at_sender=True)
 
 
 @cb_cmd(L["CMD_ON_TREE"],
