@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from time import sleep
 from typing import Iterable, List
 
 from aiocqhttp.exceptions import ActionFailed
@@ -55,7 +56,7 @@ def _check_admin(ctx: Context_T, tip: str = ''):
         }))
 async def add_clan(bot: NoneBot, ctx: Context_T, args: ParseResult):
     _check_admin(ctx)
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     if bm.check_clan(1):
         bm.modify_clan(clanid=1, name=args.N, server=args.S)
         await bot.send(ctx, L["INFO_MODIFY_CLAN"].format(args.N, args.S), at_sender=True)
@@ -67,7 +68,7 @@ async def add_clan(bot: NoneBot, ctx: Context_T, args: ParseResult):
 @cb_cmd(L["CMD_LIST_CLAN"],
         ParseArgs(usagekw=L["USAGE_LIST_CLAN"]))
 async def list_clan(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     clans = bm.list_clans()
     if len(clans) != 0:
         msg = [L["INFO_CLAN_TITLE"]]
@@ -85,7 +86,7 @@ async def list_clan(bot: NoneBot, ctx: Context_T, args: ParseResult):
             '': ArgHolder(dtype=str, default='', tips=L["TIP_NICKNAME"]),
             '@': ArgHolder(dtype=int, default=0, tips=L["TIP_QQ_NUMBER"])}))
 async def add_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     clan = _check_clan(bm)
     uid = args['@'] or args.at or ctx['user_id']
     name = args['']
@@ -112,7 +113,7 @@ async def add_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
 @cb_cmd(L["CMD_LIST_MEMBER"],
         ParseArgs(usagekw=L["USAGE_LIST_MEMBER"]))
 async def list_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     _check_clan(bm)
     members = bm.list_members(clanid=1)
     if (members_count := len(members)):
@@ -129,7 +130,7 @@ async def list_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
         ParseArgs(usagekw=L["USAGE_REMOVE_MEMBER"],
                   argdict={'@': ArgHolder(dtype=int, default=0, tips=L["TIP_QQ_NUMBER"])}))
 async def remove_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     uid = args['@'] or args.at or ctx['user_id']
     member = _check_member(bm, uid, bm.groupid, tip=L["MEMBER_NOT_FOUND"])
     if uid != ctx['user_id']:
@@ -141,7 +142,7 @@ async def remove_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
 @cb_cmd(L["CMD_CLEAR_MEMBERS"],
         ParseArgs(usagekw=L["USAGE_CLEAR_MEMBERS"]))
 async def clear_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     clan = _check_clan(bm)
     _check_admin(ctx)
     if bm.clear_members(clan["clanid"]) != 0:
@@ -153,7 +154,7 @@ async def clear_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
 @cb_cmd(L["CMD_BATCH_ADD_MEMBER"],
         ParseArgs(usagekw=L["USAGE_BATCH_ADD_MEMBER"]))
 async def batch_add_member(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     _check_clan(bm)
     _check_admin(ctx)
     try:
@@ -334,7 +335,7 @@ async def auto_unsubscribe(bot: NoneBot, ctx: Context_T, bm: ClanBattleManager, 
 
 
 async def call_subscribe(bot: NoneBot, ctx: Context_T, rcode: int, bcode: int):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
     clan = _check_clan(bm)
     cid = clan["clanid"]
@@ -361,7 +362,7 @@ async def call_subscribe(bot: NoneBot, ctx: Context_T, rcode: int, bcode: int):
             'R': ArgHolder(dtype=check_round, tips=L["TIP_ROUND"]),
             'B': ArgHolder(dtype=check_boss, tips=L["TIP_BOSS"])}))
 async def clear_subscribes(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
     clan = _check_clan(bm)
     _check_admin(ctx, tip=L["TIP_CLEAR_SUBSCRIBES"])
@@ -382,7 +383,7 @@ async def clear_subscribes(bot: NoneBot, ctx: Context_T, args: ParseResult):
 @cb_cmd(L["CMD_LIST_SUBSCRIBES"],
         ParseArgs(usagekw=L["USAGE_LIST_SUBSCRIBES"]))
 async def list_subscribes(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
     clan = _check_clan(bm)
     subscirbes = bm.list_subscribes_active(clanid=clan["clanid"], time=now, hourdelta=bm.UTC_delta(clan["server"]))
@@ -395,7 +396,7 @@ async def list_subscribes(bot: NoneBot, ctx: Context_T, args: ParseResult):
 @cb_cmd(L["CMD_LIST_USER_SUBSCRIBES"],
         ParseArgs(usagekw=L["USAGE_LIST_USER_SUBSCRIBES"]))
 async def list_user_subscribes(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
     clan = _check_clan(bm)
     uid = ctx["user_id"]
@@ -410,7 +411,7 @@ async def list_user_subscribes(bot: NoneBot, ctx: Context_T, args: ParseResult):
 @cb_cmd(L["CMD_LIST_SUBSCRIBE_TREE"],
         ParseArgs(usagekw=L["USAGE_LIST_SUBSCRIBE_TREE"]))
 async def list_subscribe_tree(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
     clan = _check_clan(bm)
     subscirbes = bm.list_subscribes(clan["clanid"], now)
@@ -423,7 +424,7 @@ async def list_subscribe_tree(bot: NoneBot, ctx: Context_T, args: ParseResult):
 @cb_cmd(L["CMD_ON_TREE"],
         ParseArgs(usagekw=L["USAGE_ON_TREE"]))
 async def on_tree(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
     uid = ctx["user_id"]
     clan = _check_clan(bm)
@@ -447,7 +448,7 @@ async def on_tree(bot: NoneBot, ctx: Context_T, args: ParseResult):
 @cb_cmd(L["CMD_LIST_TREE"],
         ParseArgs(usagekw=L["USAGE_LIST_TREE"]))
 async def list_tree(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
     clan = _check_clan(bm)
     cid = clan["clanid"]
@@ -461,7 +462,7 @@ async def list_tree(bot: NoneBot, ctx: Context_T, args: ParseResult):
 @cb_cmd(L["CMD_LOCK_BOSS"],
         ParseArgs(usagekw=L["USAGE_LOCK_BOSS"]))
 async def lock_boss(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
     clan = _check_clan(bm)
     cid = clan["clanid"]
@@ -483,7 +484,7 @@ async def lock_boss(bot: NoneBot, ctx: Context_T, args: ParseResult):
 @cb_cmd(L["CMD_UNLOCK_BOSS"],
         ParseArgs(usagekw=L["USAGE_UNLOCK_BOSS"]))
 async def unlock_boss(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
     clan = _check_clan(bm)
     cid = clan["clanid"]
@@ -509,7 +510,7 @@ async def unlock_boss(bot: NoneBot, ctx: Context_T, args: ParseResult):
             'R': ArgHolder(dtype=check_round, tips=L["TIP_ROUND"]),
             'B': ArgHolder(dtype=check_boss, tips=L["TIP_BOSS"])}))
 async def lock_boss_ahead(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
     clan = _check_clan(bm)
     cid = clan["clanid"]
@@ -550,7 +551,7 @@ async def auto_unlock_boss(bot: NoneBot, ctx: Context_T, bm: ClanBattleManager, 
 @cb_cmd(L["CMD_SHOW_PROGRESS"],
         ParseArgs(usagekw=L["USAGE_SHOW_PROGRESS"]))
 async def show_progress(bot: NoneBot, ctx: Context_T, args: ParseResult):
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
     clan = _check_clan(bm)
     cid = clan["clanid"]
@@ -572,7 +573,7 @@ async def show_progress(bot: NoneBot, ctx: Context_T, args: ParseResult):
 
 async def process_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
     """Handle submitted battle record"""
-    bm = ClanBattleManager(ctx['group_id'])
+    bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now() - timedelta(days=args.get('dayoffset', 0))
     clan = _check_clan(bm)
     member = _check_member(bm, args.userid, args.alt)
@@ -715,3 +716,38 @@ async def remove_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
         _check_admin(ctx, tip=L["TIP_UNSUBSCRIBE_OTHERS"])
     bm.remove_run(rid=args.R, clanid=cid, time=now)
     await bot.send(ctx, L["INFO_REMOVE_RUN"].format(ms.at(uid), clan["name"], args.R), at_sender=True)
+
+
+@cb_cmd(L["CMD_CHANGE_PROGRESS"],
+        ParseArgs(usagekw=L["USAGE_CHANGE_PROGRESS"], argdict={
+            '': ArgHolder(dtype=check_damage, default=1000000000, tips=L["TIP_BOSS_HP"]),
+            'R': ArgHolder(dtype=check_round, tips=L["TIP_ROUND"]),
+            'B': ArgHolder(dtype=check_boss, tips=L["TIP_BOSS"])}))
+async def change_progress(bot: NoneBot, ctx: Context_T, args: ParseResult):
+    bm = ClanBattleManager(ctx["group_id"])
+    now = datetime.now()
+    clan = _check_clan(bm)
+    cid = clan["clanid"]
+    uid = ctx["self_id"]
+    admin = _check_member(bm, uid, bm.groupid, tip=L["TIP_ADD_BOT"])
+    current_round, current_boss, remain_hp = bm.check_progress(cid, now)
+    if (current_round * 5 + current_boss) > (args.R * 5 + args.B):
+        raise AlreadyExistError(L["ERROR_CHANGE_PROGRESS_BACKWARD"].format(current_round, current_boss))
+    while (current_round * 5 + current_boss) < (args.R * 5 + args.B):
+        await process_run(bot, ctx, args=ParseResult({
+            "round": current_round, "boss": current_boss, "damage": remain_hp,
+            "userid": uid, "alt": bm.groupid,
+            "flag": RecordFlag.NORMAL.value
+        }))
+        sleep(1)   # Wait 1 second
+        current_round, current_boss, remain_hp = bm.check_progress(cid, now)
+    target_hp = max(0, min(args.get(''), remain_hp))
+    total_hp, _ = bm.get_boss_info(current_round, current_boss, clan["server"])
+    damage = abs(remain_hp - target_hp)
+    if damage != 0:
+        await process_run(bot, ctx, args=ParseResult({
+            "round": current_round, "boss": current_boss, "damage": damage,
+            "userid": uid, "alt": bm.groupid,
+            "flag": RecordFlag.NORMAL.value
+        }))
+    await bot.send(ctx, L["INFO_CHANGE_PROGRESS"].format(clan["name"], current_round, current_boss, target_hp, total_hp), at_sender=True)
