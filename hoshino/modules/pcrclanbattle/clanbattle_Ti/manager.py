@@ -302,21 +302,37 @@ class ClanBattleManager(object):
         Current round and boss are determined by the last submitted record.
         """
         clan = self.fetch_clan_with_check(clanid)
+        server = clan["server"]
         record = self.fetch_battle_record(clanid, time)
         run_list = record.find_all()
         current_round, current_boss = 1, 1
-        remain_hp, _ = self.get_boss_info(
-            current_round, current_boss, clan["server"])
         if len(run_list) != 0:
             current_round = run_list[-1]["round"]
             current_boss = run_list[-1]["boss"]
+        remain_hp, _ = self.get_boss_info(
+            current_round, current_boss, server)
         for run in reversed(run_list):
             if run["round"] == current_round and run["boss"] == current_boss:
                 remain_hp -= run["damage"]
+        if remain_hp <= 0:
+            current_round, current_boss = self.next_boss(current_round, current_boss)
+            remain_hp, _ = self.get_boss_info(
+                current_round, current_boss, server)
         return (current_round, current_boss, remain_hp)
     # -*- SUMMARY OPERATIONS END -*-
 
     # -*- SUBSCRIBE OPERATIONS -*-
+    @staticmethod
+    def change_subscribe_flag(subscribeinfo: Dict, newflag: int):
+        # Convert keys round -> rcode, boss -> bcode
+        sinfo = subscribeinfo
+        if "round" in sinfo:
+            sinfo.update({"rcode": sinfo.pop("round", 0)})
+        if "boss" in sinfo:
+            sinfo.update({"bcode": sinfo.pop("boss", 0)})
+        sinfo["flag"] = newflag
+        return sinfo        
+
     def add_subscribe(self, userid: int, alt: int, time: datetime, rcode: int, bcode: int, flag: int, msg: str):
         if member := self.fetch_member(userid, alt):
             tree = self.fecth_subscribe_tree(member["clanid"], time)

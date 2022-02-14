@@ -310,9 +310,9 @@ async def unsubscribe(bot: NoneBot, ctx: Context_T, args: ParseResult):
     if subscribe["flag"] == SubscribeFlag.WHOLE.value:
         # Auto unlock boss
         for locked in bm.list_subscribes_locked(cid, now, subscribe["round"], subscribe["boss"]):
-            locked["flag"] = SubscribeFlag.CANCEL.value
+            locked = bm.change_subscribe_flag(locked, SubscribeFlag.CANCEL.value)
             bm.modify_subscribe(**locked)
-    subscribe["flag"] = SubscribeFlag.CANCEL.value
+    subscribe = bm.change_subscribe_flag(subscirbe, SubscribeFlag.CANCEL.value)
     bm.modify_subscribe(**subscribe)
     #bm.remove_subscribe(sid=args.S, clanid=clanid, time=now)
     msg = [L["INFO_UNSUBSCRIBE"].format(serial2text(
@@ -323,14 +323,12 @@ async def unsubscribe(bot: NoneBot, ctx: Context_T, args: ParseResult):
     await bot.send(ctx, '\n'.join(msg), at_sender=True)
 
 
-async def auto_unsubscribe(bot: NoneBot, ctx: Context_T, userid: int, alt: int, rcode: int, bcode: int):
-    bm = ClanBattleManager(ctx['group_id'])
+async def auto_unsubscribe(bot: NoneBot, ctx: Context_T, bm: ClanBattleManager, userid: int, alt: int, rcode: int, bcode: int):
     now = datetime.now()
     subscribes = bm.list_subscribes_by_detail(userid, alt, now, rcode, bcode)
     if len(subscribes) == 0:
         return
-    subscribe = subscribes[0]
-    subscribe["flag"] = SubscribeFlag.FINISHED.value
+    subscribe = bm.change_subscribe_flag(subscribes[0], SubscribeFlag.FINISHED.value)
     bm.modify_subscribe(**subscribe)
     await bot.send(ctx, L["INFO_AUTO_UNSUBSCRIBE"].format(ms.at(userid), serial2text(rcode), int2callnum(bcode)))
 
@@ -352,7 +350,7 @@ async def call_subscribe(bot: NoneBot, ctx: Context_T, rcode: int, bcode: int):
         msg.append(L["INFO_OFF_TREE"])
         msg.extend(_gen_namelist_text(bm, ontrees, do_at=True))
         for ontree in ontrees:
-            ontree["flag"] = SubscribeFlag.FINISHED.value
+            ontree = bm.change_subscribe_flag(ontree, SubscribeFlag.FINISHED.value)
             bm.modify_subscribe(**ontree)
     if len(msg) != 0:
         await bot.send(ctx, '\n'.join(msg), at_sender=False)
@@ -373,7 +371,7 @@ async def clear_subscribes(bot: NoneBot, ctx: Context_T, args: ParseResult):
         clan["clanid"], now, args.R, args.B)
     if len(subscribes) > 0:
         for subscribe in subscribes:
-            subscribe["flag"] = SubscribeFlag.CANCEL.value
+            subscribe = bm.change_subscribe_flag(subscirbe, SubscribeFlag.CANCEL.value)
             bm.modify_subscribe(**subscribe)
         await bot.send(ctx, L["INFO_CLEAR_SUBSCRIBES"].format(round_text, boss_text))
     else:
@@ -458,7 +456,7 @@ async def unlock_boss(bot: NoneBot, ctx: Context_T, args: ParseResult):
         if userid != ctx["user_id"]:
             _check_admin(ctx, tip=L["TIP_UNLOCK_BOSS"].format(
                 round_text, boss_text, ms.at(userid)))
-        locked["flag"] = SubscribeFlag.FINISHED
+        locked = bm.change_subscribe_flag(locked, SubscribeFlag.FINISHED.value)
         bm.modify_subscribe(**locked)
         await bot.send(ctx, L["INFO_UNLOCK_BOSS"].format(round_text, boss_text, ms.at(userid)), at_sender=True)
     else:
@@ -492,19 +490,18 @@ async def lock_boss_ahead(bot: NoneBot, ctx: Context_T, args: ParseResult):
         await bot.send(ctx, L["INFO_LOCK_BOSS"].format(round_text, boss_text, ms.at(uid)), at_sender=True)
 
 
-async def auto_unlock_boss(bot: NoneBot, ctx: Context_T, bm: ClanBattleManager):
+async def auto_unlock_boss(bot: NoneBot, ctx: Context_T, bm: ClanBattleManager, rcode: int, bcode: int):
     now = datetime.now()
     clan = _check_clan(bm)
     cid = clan["clanid"]
-    current_round, current_boss, _ = bm.check_progress(cid, now)
-    if bm.check_boss_locked(cid, now, current_round, current_boss):
+    if bm.check_boss_locked(cid, now, rcode, bcode):
         locked = bm.list_subscribes_locked(
-            cid, now, current_round, current_boss)[0]
+            cid, now, rcode, bcode)[0]
         uid = locked["userid"]
         if uid != ctx["user_id"]:
             await bot.send(ctx, L["INFO_CLASH"].format(ms.at(uid)), at_sender=True)
         else:
-            locked["flag"] = SubscribeFlag.FINISHED.value
+            locked = bm.change_subscribe_flag(locked, SubscribeFlag.FINISHED.value)
             bm.modify_subscribe(**locked)
             await bot.send(ctx, L["INFO_AUTO_UNLOCK"], at_sender=True)
 
@@ -538,9 +535,12 @@ async def process_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
     now = datetime.now() - timedelta(days=args.get('dayoffset', 0))
     clan = _check_clan(bm)
     member = _check_member(bm, args.userid, args.alt)
+    cid = clan["clanid"]
+    server = clan["server"]
+    uid = member["userid"]
+    gid = member["alt"]
 
-    current_round, current_boss, remain_hp = bm.check_progress(
-        clan["clanid"], now)
+    current_round, current_boss, remain_hp = bm.check_progress(clanid=cid, time=now)
     rcode = args.round or current_round
     bcode = args.boss or current_boss
     damage = args.damage if args.flag != RecordFlag.TAIL.value else (
@@ -553,9 +553,9 @@ async def process_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
 
     msg = []
     run_list = bm.list_run_by_user_day(
-        userid=member["userid"], alt=member["alt"], time=now, hourdelta=bm.UTC_delta(clan["server"]))
+        userid=uid, alt=gid, time=now, hourdelta=bm.UTC_delta(server))
     # If the previous run is tail, this run must be leftover
-    if len(run_list) > 0 and run_list[-1]['flag'] == RecordFlag.TAIL.value:
+    if len(run_list) > 0 and run_list[-1]["flag"] == RecordFlag.TAIL.value:
         flag = RecordFlag.LEFTOVER.value
         msg.append(L["INFO_RETAG_LEFTOVER"])
 
@@ -579,15 +579,15 @@ async def process_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
                 else:
                     msg.append(L["INFO_LESS_DAMAGE"])
 
-    rid = bm.add_run(userid=member["userid"], alt=member["alt"],
+    rid = bm.add_run(userid=uid, alt=gid,
                      time=now, rcode=rcode, bcode=bcode, damage=damage, flag=flag)
-    after_round, after_boss, after_hp = bm.check_progress(clanid=1, time=now)
+    after_round, after_boss, after_hp = bm.check_progress(clanid=cid, time=now)
     total_hp, score_rate = bm.get_boss_info(
-        after_round, after_boss, clan["server"])
-    tier = bm.current_tier(after_round, clan["server"])
+        after_round, after_boss, server)
+    tier = bm.current_tier(after_round, server)
     msg.append(_gen_record_text(
         rid=rid, member_name=member["name"], rcode=rcode, bcode=bcode, damage=damage))
-    msg.append(_gen_progress_text(clan_name=clan['name'], tier=tier, rcode=after_round,
+    msg.append(_gen_progress_text(clan_name=clan["name"], tier=tier, rcode=after_round,
                bcode=after_boss, hp=after_hp, total_hp=total_hp, score_rate=score_rate))
     await bot.send(ctx, '\n'.join(msg), at_sender=True)
 
@@ -595,8 +595,8 @@ async def process_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
     if (after_round != current_round) or (after_boss != current_boss):
         await call_subscribe(bot, ctx, after_round, after_boss)
 
-    await auto_unlock_boss(bot, ctx, bm)
-    await auto_unsubscribe(bot, ctx, bm.groupid, member['userid'], bcode)
+    await auto_unlock_boss(bot, ctx, bm, current_round, current_boss)
+    await auto_unsubscribe(bot, ctx, bm, uid, bm.groupid, current_round, current_boss)
 
 
 @cb_cmd(L["CMD_ADD_RUN"],
@@ -607,6 +607,7 @@ async def process_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
             'B': ArgHolder(dtype=check_boss, default=0, tips=L["TIP_BOSS"]),
             'D': ArgHolder(dtype=int, default=0, tips=L["TIP_DATE_DELTA"])}))
 async def add_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
+    print(args)
     await process_run(bot, ctx, args=ParseResult({
         "round": args.R, "boss": args.B, "damage": args.get(''),
         "userid": args['@'] or args.at or ctx["user_id"],

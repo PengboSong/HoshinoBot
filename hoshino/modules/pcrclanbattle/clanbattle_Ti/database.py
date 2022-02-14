@@ -331,11 +331,12 @@ flag    INT       NOT NULL''')
         return " AND ".join(condition_sql), tuple(condition_paras)
 
     
-    def add(self, battleinfo : Dict):
+    def add(self, battleinfo : Dict) -> int:
         sql = f"INSERT INTO {self._table} ({self._columns}) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)"
         with self._connect() as conn:
             try:
-                conn.execute(sql, self.unpack_battleinfo(battleinfo)[1:])
+                cursor = conn.execute(sql, self.unpack_battleinfo(battleinfo)[1:])
+                return cursor.lastrowid
             except sqlite3.DatabaseError as err:
                 logger.error("[ClanBattleDB.add Failed] " + str(err))
                 raise DatabaseError(L["ADD_RECORD_FAILED"])
@@ -469,11 +470,12 @@ msg     TEXT      NOT NULL''')
             condition_paras.append(flag)
         return " AND ".join(condition_sql), tuple(condition_paras)
 
-    def add(self, subscribeinfo: Dict):
+    def add(self, subscribeinfo: Dict) -> int:
         sql = f"INSERT INTO {self._table} ({self._columns}) VALUES (NULL, ?, ?, ?, ?, ?, ?, ?)"
         with self._connect() as conn:
             try:
-                conn.execute(sql, self.unpack_subscribeinfo(subscribeinfo)[1:])
+                cursor = conn.execute(sql, self.unpack_subscribeinfo(subscribeinfo)[1:])
+                return cursor.lastrowid
             except sqlite3.DatabaseError as err:
                 logger.error("[SubscribeDB.add Failed] " + str(err))
                 raise DatabaseError(L["ADD_SUBSCRIBE_FAILED"])
@@ -491,7 +493,7 @@ msg     TEXT      NOT NULL''')
         sql = f"UPDATE {self._table} SET userid=?, alt=?, time=?, round=?, boss=?, flag=?, msg=? WHERE sid=?"
         with self._connect() as conn:
             try:
-                paras = self.unpack_battleinfo(subscribeinfo)
+                paras = self.unpack_subscribeinfo(subscribeinfo)
                 conn.execute(sql, (*paras[1:], paras[0]))
             except sqlite3.DatabaseError as err:
                 logger.error("[SubscribeDB.modify Failed] " + str(err))

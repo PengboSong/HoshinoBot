@@ -27,19 +27,20 @@ reg_server_cn = re.compile(r'^CN|[B国]服?$', re.IGNORECASE)
 
 def convert_unit(num: Union[int, float], unit: str = '') -> int:
     value = round(num)
-    if unit in 'kK':
-        value = round(num * 1000)
-    elif unit in 'wW':
-        value = round(num * 10000)
-    elif unit in 'mM':
-        value = round(num * 1000000)
+    if unit:
+        if unit in 'kK':
+            value = round(num * 1000)
+        elif unit in 'wW':
+            value = round(num * 10000)
+        elif unit in 'mM':
+            value = round(num * 1000000)
     return value
 
 
 def check_damage(para: str) -> int:
     para = util.normalize_str(para).strip()
     if res := reg_dint.match(para):
-        v = convert_unit(res.group(1), res.group(2))
+        v = convert_unit(float(res.group(1)), res.group(2))
         if v > 1000000000:
             raise ParseError(L["DAMAGE_OVERFLOW"])
         return v
