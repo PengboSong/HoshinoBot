@@ -202,8 +202,8 @@ def _gen_namelist_text(bm: ClanBattleManager, subscribe_list: Iterable, do_at: b
 
 @cb_cmd(L["CMD_SUBSCRIBE"],
         ParseArgs(usagekw=L["USAGE_SUBSCRIBE"], argdict={
-            'R': ArgHolder(dtype=check_round, tips=L["TIP_ROUND"]),
-            'B': ArgHolder(dtype=check_boss, tips=L["TIP_BOSS"]),
+            'R': ArgHolder(dtype=check_round, default=0, tips=L["TIP_ROUND"]),
+            'B': ArgHolder(dtype=check_boss, default=0, tips=L["TIP_BOSS"]),
             'M': ArgHolder(dtype=str, default='', tips=L["TIP_MESSAGE"])
         }))
 async def subscribe(bot: NoneBot, ctx: Context_T, args: ParseResult):
@@ -214,26 +214,27 @@ async def subscribe(bot: NoneBot, ctx: Context_T, args: ParseResult):
     cid = clan["clanid"]
     dhours = bm.UTC_delta(clan["server"])
     _check_member(bm=bm, userid=uid, alt=bm.groupid)
-    rtext = serial2text(args.R)
-    btext = int2callnum(args.B)
     # Check current progress
     current_round, current_boss, _ = bm.check_progress(cid, now)
-    if (args.R * 5 + args.B) <= (current_round * 5 + current_boss):
+    target_round, target_boss = bm.filter_round_boss(args.R, args.B, current_round, current_boss)
+    rtext = serial2text(target_round)
+    btext = int2callnum(target_boss)
+    if (target_round * 5 + target_boss) <= (current_round * 5 + current_boss):
         raise ClanBattleError(
             L["ERROR_LATE_SUBSCRIBE"].format(rtext, btext))
     # Check whether target boss is locked
-    if bm.check_boss_locked(cid, now, args.R, args.B):
+    if bm.check_boss_locked(cid, now, target_round, target_boss):
         raise AlreadyExistError(
             L["ERROR_TARGET_BOSS_LOCKED"].format(rtext, btext))
     # Check whether user has already subscribed the same boss
-    if len(bm.list_subscribes_by_detail(uid, bm.groupid, now, args.R, args.B)) != 0:
+    if len(bm.list_subscribes_by_detail(uid, bm.groupid, now, target_round, target_boss)) != 0:
         raise AlreadyExistError(
             L["ERROR_DUPLICATED_SUBSCRIBE"].format(rtext, btext))
     msg = ['']
     # Check whether target boss subscribe number has reached limit
-    if len(bm.list_subscribes_by_boss(cid, now, args.R, args.B)) < config["BOSS_SUBSCRIBE_LIMIT"]:
-        sid = bm.add_subscribe(uid, bm.groupid, now, args.R,
-                         args.B, SubscribeFlag.NORMAL.value, args.M)
+    if len(bm.list_subscribes_by_boss(cid, now, target_round, target_boss)) < config["BOSS_SUBSCRIBE_LIMIT"]:
+        sid = bm.add_subscribe(uid, bm.groupid, now, target_round,
+                         target_boss, SubscribeFlag.NORMAL.value, args.M)
         msg.append(L["INFO_SUBSCRIBE"].format(rtext, btext, sid))
     else:
         msg.append(L["INFO_SUBSCRIBE_REACH_LIMIT"].format(
@@ -246,8 +247,8 @@ async def subscribe(bot: NoneBot, ctx: Context_T, args: ParseResult):
 
 @cb_cmd(L["CMD_SUBSCRIBE_WHOLE"],
         ParseArgs(usagekw=L["USAGE_SUBSCRIBE_WHOLE"], argdict={
-            'R': ArgHolder(dtype=check_round, tips=L["TIP_ROUND"]),
-            'B': ArgHolder(dtype=check_boss, tips=L["TIP_BOSS"]),
+            'R': ArgHolder(dtype=check_round, default=0, tips=L["TIP_ROUND"]),
+            'B': ArgHolder(dtype=check_boss, default=0, tips=L["TIP_BOSS"]),
             'M': ArgHolder(dtype=str, default='', tips=L["TIP_MESSAGE"])
         }))
 async def subscribe_whole(bot: NoneBot, ctx: Context_T, args: ParseResult):
@@ -258,31 +259,32 @@ async def subscribe_whole(bot: NoneBot, ctx: Context_T, args: ParseResult):
     dhours = bm.UTC_delta(clan["server"])
     uid = ctx["user_id"]
     _check_member(bm=bm, userid=uid, alt=bm.groupid)
-    rtext = serial2text(args.R)
-    btext = int2callnum(args.B)
     # Check current progress
     current_round, current_boss, _ = bm.check_progress(cid, now)
-    if (args.R * 5 + args.B) <= (current_round * 5 + current_boss):
+    target_round, target_boss = bm.filter_round_boss(args.R, args.B, current_round, current_boss)
+    rtext = serial2text(target_round)
+    btext = int2callnum(target_boss)
+    if (target_round * 5 + target_boss) <= (current_round * 5 + current_boss):
         raise ClanBattleError(
             L["ERROR_LATE_SUBSCRIBE"].format(rtext, btext))
     # Check whether target boss is locked
-    if bm.check_boss_locked(cid, now, args.R, args.B):
+    if bm.check_boss_locked(cid, now, target_round, target_boss):
         raise AlreadyExistError(
             L["ERROR_TARGET_BOSS_LOCKED"].format(rtext, btext))
     # Check whether user has already subscribed the same boss
-    if len(bm.list_subscribes_by_detail(uid, bm.groupid, now, args.R, args.B)) != 0:
+    if len(bm.list_subscribes_by_detail(uid, bm.groupid, now, target_round, target_boss)) != 0:
         raise AlreadyExistError(
             L["ERROR_DUPLICATED_SUBSCRIBE"].format(rtext, btext))
     msg = ['']
     # Check whether target boss subscribe number has reached limit
     # For whole run, the limit should be 1
-    if len(bm.list_subscribes_by_boss(cid, now, args.R, args.B)) == 0:
+    if len(bm.list_subscribes_by_boss(cid, now, target_round, target_boss)) == 0:
         bm.add_subscribe(userid=uid, alt=bm.groupid, time=now,
-                         rcode=args.R, bcode=args.B,
+                         rcode=target_round, bcode=target_boss,
                          flag=SubscribeFlag.WHOLE.value, msg=args.M)
         # Auto lock boss
         sid = bm.add_subscribe(userid=uid, alt=bm.groupid, time=now,
-                         rcode=args.R, bcode=args.B,
+                         rcode=target_round, bcode=target_boss,
                          flag=SubscribeFlag.LOCKED.value, msg=args.M)
         msg.append(L["INFO_SUBSCRIBE"].format(rtext, btext, sid))
         msg.append(L["INFO_LOCK_BOSS"].format(
@@ -567,29 +569,30 @@ async def unlock_boss(bot: NoneBot, ctx: Context_T, args: ParseResult):
 
 @cb_cmd(L["CMD_LOCK_BOSS_AHEAD"],
         ParseArgs(usagekw=L["USAGE_LOCK_BOSS_AHEAD"], argdict={
-            'R': ArgHolder(dtype=check_round, tips=L["TIP_ROUND"]),
-            'B': ArgHolder(dtype=check_boss, tips=L["TIP_BOSS"])}))
+            'R': ArgHolder(dtype=check_round, default=0, tips=L["TIP_ROUND"]),
+            'B': ArgHolder(dtype=check_boss, default=0, tips=L["TIP_BOSS"])}))
 async def lock_boss_ahead(bot: NoneBot, ctx: Context_T, args: ParseResult):
     bm = ClanBattleManager(ctx["group_id"])
     now = datetime.now()
     clan = _check_clan(bm)
     cid = clan["clanid"]
-    rtext = serial2text(args.R)
-    btext = int2callnum(args.B)
     # Check current progress
     current_round, current_boss, _ = bm.check_progress(cid, now)
-    if (args.R * 5 + args.B) <= (current_round * 5 + current_boss):
+    target_round, target_boss = bm.filter_round_boss(args.R, args.B, current_round, current_boss)
+    rtext = serial2text(target_round)
+    btext = int2callnum(target_boss)
+    if (target_round * 5 + target_boss) <= (current_round * 5 + current_boss):
         raise ClanBattleError(
             L["ERROR_LATE_SUBSCRIBE"].format(rtext, btext))
-    if bm.check_boss_locked(cid, now, args.R, args.B):
-        locked = bm.list_subscribes_locked(cid, now, args.R, args.B)[0]
+    if bm.check_boss_locked(cid, now, target_round, target_boss):
+        locked = bm.list_subscribes_locked(cid, now, target_round, target_boss)[0]
         await bot.send(ctx, L["ERROR_ALREADY_LOCKED"].format(rtext, btext, ms.at(locked["userid"])), at_sender=True)
     else:
         uid = ctx["user_id"]
-        subscribes = bm.list_subscribes_by_boss(cid, now, args.R, args.B)
+        subscribes = bm.list_subscribes_by_boss(cid, now, target_round, target_boss)
         if len(subscribes) != 0 and subscribes[0]["userid"] == uid:
             bm.add_subscribe(userid=uid, alt=bm.groupid, time=now,
-                            rcode=args.R, bcode=args.B,
+                            rcode=target_round, bcode=target_boss,
                             flag=SubscribeFlag.LOCKED.value, msg='')
             await bot.send(ctx, L["INFO_LOCK_BOSS"].format(rtext, btext, ms.at(uid)), at_sender=True)
         else:
