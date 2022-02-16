@@ -2,8 +2,6 @@
 # Refactor by Titanium
 # Current Version: v2-Ti-ver0.1-alpha
 
-import re
-
 from hoshino import Service, util
 from hoshino.typing import *
 from nonebot import on_command
@@ -79,46 +77,4 @@ def cb_cmd(name, parser: ParseArgs) -> Callable:
 # Import commands
 from .cmdcollections import *
 from .union_run import union_run
-from .help_doc import help_doc
-
-
-# Map words
-map_numbers = dict(zip('12345一二三四五壹贰叁肆伍', [i % 5 + 1 for i in range(15)]))
-map_letters = dict(zip('ABCDEabcde', [i % 5 + 1 for i in range(10)]))
-
-# Regex
-reg_reference = re.compile(r'^[抄查]?(?P<tier>(?P<num>[1-5一二三四五壹贰叁肆伍])阶段|(?P<letter>[A-Ea-e])面)?作业$')
-
-
-@sv.on_rex(reg_reference)
-async def cb_clanbattle_reference(bot: NoneBot, ev: CQEvent):
-    res = ev["match"]
-    tier = 0
-    if res.group("tier"):
-        if num := res.group("num"):
-            tier = map_numbers[num]
-        if letter := res.group("letter"):
-            tier = map_letters[letter]
-    link = "LINK_CLAN_BATTLE_REFERENCE"
-    title = "INFO_CLAN_BATTLE_REFERENCE_TITLE"
-    content = "INFO_CLAN_BATTLE_REFERENCE_CONTENT"
-    if (tier > 0) and (tier <= 5):
-        link = f"LINK_CLAN_BATTLE_REFERENCE_TIER_{tier}"
-        title = f"INFO_CLAN_BATTLE_REFERENCE_TIER_{tier}_TITLE"
-        content = f"INFO_CLAN_BATTLE_REFERENCE_TIER_{tier}_CONTENT"
-        
-    await bot.send(ev, L[content], at_sender=True)
-    msg = MessageSegment.share(url=L[link],
-                            title=L[title],
-                            content=L[content])
-    await bot.send(ev, msg)
-
-
-@sv.on_fullmatch(*L["CMD_CLAN_BATTLE_RANK"], only_to_me=False)
-async def cb_clanbattle_rank(bot: NoneBot, ev: CQEvent):
-    await bot.send(ev, L["INFO_CLAN_BATTLE_RANK_CONTENT"], at_sender=True)
-    msg = MessageSegment.share(url=L["LINK_CLAN_BATTLE_RANK"],
-                               title=L["INFO_CLAN_BATTLE_RANK_TITLE"],
-                               content=L["INFO_CLAN_BATTLE_RANK_CONTENT"])
-    await bot.send(ev, msg)
-
+from .help_doc import cb_clanbattle_reference, cb_clanbattle_rank, cb_help_doc
