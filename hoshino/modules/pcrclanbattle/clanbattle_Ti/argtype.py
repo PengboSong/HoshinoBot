@@ -61,7 +61,7 @@ def check_round(para: str) -> int:
     if reg_rcode.match(para):
         return int(para)
     else:
-        return ParseError(L["INVALID_ROUND_CODE"])
+        raise ParseError(L["INVALID_ROUND_CODE"])
 
 
 def check_server_code(para: str) -> int:

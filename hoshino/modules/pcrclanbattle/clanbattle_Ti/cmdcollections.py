@@ -194,7 +194,7 @@ def _gen_namelist_text(bm: ClanBattleManager, subscribe_list: Iterable, do_at: b
         member = str(ms.at(uid)) if do_at else bm.fetch_member(
             uid, bm.groupid)["name"]
         msg.append(L["INFO_SUBSCRIBE_QUEUE_CONTENT"].format(
-            member, serial2text(subscribe["round"]), int2callnum(
+            subscribe["sid"], member, serial2text(subscribe["round"]), int2callnum(
                 subscribe["boss"]),
             check_subscribe_flag(subscribe["flag"]), subscribe["msg"]))
     return msg
@@ -231,9 +231,9 @@ async def subscribe(bot: NoneBot, ctx: Context_T, args: ParseResult):
     msg = []
     # Check whether target boss subscirbe number has reached limit
     if len(bm.list_subscribes_by_boss(cid, now, args.R, args.B)) < config["BOSS_SUBSCRIBE_LIMIT"]:
-        bm.add_subscribe(uid, bm.groupid, now, args.R,
+        sid = bm.add_subscribe(uid, bm.groupid, now, args.R,
                          args.B, SubscribeFlag.NORMAL.value, args.M)
-        msg.append(L["INFO_SUBSCRIBE"].format(round_text, boss_text))
+        msg.append(L["INFO_SUBSCRIBE"].format(round_text, boss_text, sid))
     else:
         msg.append(L["INFO_SUBSCRIBE_REACH_LIMIT"].format(
             round_text, boss_text))
@@ -279,10 +279,10 @@ async def subscribe_whole(bot: NoneBot, ctx: Context_T, args: ParseResult):
                          rcode=args.R, bcode=args.B,
                          flag=SubscribeFlag.WHOLE.value, msg=args.M)
         # Auto lock boss
-        bm.add_subscribe(userid=uid, alt=bm.groupid, time=now,
+        sid = bm.add_subscribe(userid=uid, alt=bm.groupid, time=now,
                          rcode=args.R, bcode=args.B,
                          flag=SubscribeFlag.LOCKED.value, msg=args.M)
-        msg.append(L["INFO_SUBSCRIBE"].format(round_text, boss_text))
+        msg.append(L["INFO_SUBSCRIBE"].format(round_text, boss_text, sid))
         msg.append(L["INFO_LOCK_BOSS"].format(
             round_text, boss_text, ms.at(uid)))
     else:
@@ -313,11 +313,11 @@ async def unsubscribe(bot: NoneBot, ctx: Context_T, args: ParseResult):
         for locked in bm.list_subscribes_locked(cid, now, subscribe["round"], subscribe["boss"]):
             locked = bm.change_subscribe_flag(locked, SubscribeFlag.CANCEL.value)
             bm.modify_subscribe(**locked)
-    subscribe = bm.change_subscribe_flag(subscirbe, SubscribeFlag.CANCEL.value)
+    subscribe = bm.change_subscribe_flag(subscribe, SubscribeFlag.CANCEL.value)
     bm.modify_subscribe(**subscribe)
     #bm.remove_subscribe(sid=args.S, clanid=clanid, time=now)
     msg = [L["INFO_UNSUBSCRIBE"].format(serial2text(
-        subscribe["round"]), int2callnum(subscribe["boss"]))]
+        subscribe["rcode"]), int2callnum(subscribe["bcode"]))]
     msg.append(L["INFO_SUBSCRIBE_QUEUE_TITLE"])
     msg.extend(_gen_namelist_text(bm=bm,
                                   subscribe_list=bm.list_subscribes_active(cid, now, bm.UTC_delta(clan["server"]))))
@@ -500,7 +500,7 @@ async def unlock_boss(bot: NoneBot, ctx: Context_T, args: ParseResult):
                 round_text, boss_text, ms.at(userid)))
         locked = bm.change_subscribe_flag(locked, SubscribeFlag.FINISHED.value)
         bm.modify_subscribe(**locked)
-        await bot.send(ctx, L["INFO_UNLOCK_BOSS"].format(round_text, boss_text, ms.at(userid)), at_sender=True)
+        await bot.send(ctx, L["INFO_UNLOCK_BOSS"].format(round_text, boss_text), at_sender=True)
     else:
         await bot.send(ctx, L["ERROR_BOSS_UNLOCKED"].format(round_text, boss_text), at_sender=True)
 
@@ -732,7 +732,8 @@ async def change_progress(bot: NoneBot, ctx: Context_T, args: ParseResult):
     admin = _check_member(bm, uid, bm.groupid, tip=L["TIP_ADD_BOT"])
     current_round, current_boss, remain_hp = bm.check_progress(cid, now)
     if (current_round * 5 + current_boss) > (args.R * 5 + args.B):
-        raise AlreadyExistError(L["ERROR_CHANGE_PROGRESS_BACKWARD"].format(current_round, current_boss))
+        total_hp, _ = bm.get_boss_info(current_round, current_boss, clan["server"])
+        raise AlreadyExistError(L["ERROR_CHANGE_PROGRESS_BACKWARD"].format(clan["name"], current_round, current_boss, remain_hp, total_hp))
     while (current_round * 5 + current_boss) < (args.R * 5 + args.B):
         await process_run(bot, ctx, args=ParseResult({
             "round": current_round, "boss": current_boss, "damage": remain_hp,
