@@ -432,7 +432,7 @@ class ClanBattleManager(object):
             rcode=rcode, bcode=bcode,
             flags=(SubscribeFlag.ONTREE.value,))
     
-    def list_subscribes_locked(self, clanid: int, time: datetime, rcode: int, bcode: int) -> List:
+    def list_subscribes_locked(self, clanid: int, time: datetime, rcode: Optional[int] = None, bcode: Optional[int] = None) -> List:
         """List all locked boss subscribes"""
         return self.conditional_filter_subscribes(
             subscribes_list=self.list_subscribes(clanid, time),

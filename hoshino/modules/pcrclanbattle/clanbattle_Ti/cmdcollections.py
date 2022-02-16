@@ -71,7 +71,7 @@ async def list_clan(bot: NoneBot, ctx: Context_T, args: ParseResult):
     bm = ClanBattleManager(ctx["group_id"])
     clans = bm.list_clans()
     if len(clans) != 0:
-        msg = [L["INFO_CLAN_TITLE"]]
+        msg = ['', L["INFO_CLAN_TITLE"]]
         for clan in clans:
             msg.append(L["INFO_CLAN_CONTENT"].format(
                 clan["clanid"], clan["name"], check_server_name(clan["server"])))
@@ -188,7 +188,7 @@ def _gen_record_text(rid: int, member_name: str, rcode: int, bcode: int, damage:
 
 
 def _gen_namelist_text(bm: ClanBattleManager, subscribe_list: Iterable, do_at: bool = False) -> List[str]:
-    msg = []
+    msg = ['']
     for subscribe in subscribe_list:
         uid = subscribe["userid"]
         member = str(ms.at(uid)) if do_at else bm.fetch_member(
@@ -228,7 +228,7 @@ async def subscribe(bot: NoneBot, ctx: Context_T, args: ParseResult):
     if len(bm.list_subscribes_by_detail(uid, bm.groupid, now, args.R, args.B)) != 0:
         raise AlreadyExistError(
             L["ERROR_DUPLICATED_SUBSCRIBE"].format(round_text, boss_text))
-    msg = []
+    msg = ['']
     # Check whether target boss subscirbe number has reached limit
     if len(bm.list_subscribes_by_boss(cid, now, args.R, args.B)) < config["BOSS_SUBSCRIBE_LIMIT"]:
         sid = bm.add_subscribe(uid, bm.groupid, now, args.R,
@@ -271,7 +271,7 @@ async def subscribe_whole(bot: NoneBot, ctx: Context_T, args: ParseResult):
     if len(bm.list_subscribes_by_detail(uid, bm.groupid, now, args.R, args.B)) != 0:
         raise AlreadyExistError(
             L["ERROR_DUPLICATED_SUBSCRIBE"].format(round_text, boss_text))
-    msg = []
+    msg = ['']
     # Check whether target boss subscirbe number has reached limit
     # For whole run, the limit should be 1
     if len(bm.list_subscribes_by_boss(cid, now, args.R, args.B)) == 0:
@@ -316,7 +316,7 @@ async def unsubscribe(bot: NoneBot, ctx: Context_T, args: ParseResult):
     subscribe = bm.change_subscribe_flag(subscribe, SubscribeFlag.CANCEL.value)
     bm.modify_subscribe(**subscribe)
     #bm.remove_subscribe(sid=args.S, clanid=clanid, time=now)
-    msg = [L["INFO_UNSUBSCRIBE"].format(serial2text(
+    msg = ['', L["INFO_UNSUBSCRIBE"].format(serial2text(
         subscribe["rcode"]), int2callnum(subscribe["bcode"]))]
     msg.append(L["INFO_SUBSCRIBE_QUEUE_TITLE"])
     msg.extend(_gen_namelist_text(bm=bm,
@@ -341,7 +341,7 @@ async def call_subscribe(bot: NoneBot, ctx: Context_T, rcode: int, bcode: int):
     cid = clan["clanid"]
     subscribes = bm.list_subscribes_by_boss(cid, now, rcode, bcode)
     ontrees = bm.list_subscribes_ontree(cid, now, rcode, bcode)
-    msg = []
+    msg = ['']
     if len(subscribes) > 0:
         msg.append(L["INFO_CALL_SUBSCRIBES"].format(
             serial2text(rcode), int2callnum(bcode)))
@@ -387,7 +387,7 @@ async def list_subscribes(bot: NoneBot, ctx: Context_T, args: ParseResult):
     now = datetime.now()
     clan = _check_clan(bm)
     subscirbes = bm.list_subscribes_active(clanid=clan["clanid"], time=now, hourdelta=bm.UTC_delta(clan["server"]))
-    msg = [L["INFO_LIST_SUBSCRIBES"].format(clan["name"], len(subscirbes))]
+    msg = ['', L["INFO_LIST_SUBSCRIBES"].format(clan["name"], len(subscirbes))]
     msg.append(L["INFO_SUBSCRIBE_QUEUE_TITLE"])
     msg.extend(_gen_namelist_text(bm, subscirbes))
     await bot.send(ctx, '\n'.join(msg), at_sender=True)
@@ -402,7 +402,7 @@ async def list_user_subscribes(bot: NoneBot, ctx: Context_T, args: ParseResult):
     uid = ctx["user_id"]
     member = _check_member(bm=bm, userid=uid, alt=bm.groupid)
     subscirbes = bm.list_subscribes_user_active(userid=uid, alt=member["alt"], time=now, hourdelta=bm.UTC_delta(clan["server"]))
-    msg = [L["INFO_LIST_SUBSCRIBES"].format(clan["name"], len(subscirbes))]
+    msg = ['', L["INFO_LIST_SUBSCRIBES"].format(clan["name"], len(subscirbes))]
     msg.append(L["INFO_SUBSCRIBE_QUEUE_TITLE"])
     msg.extend(_gen_namelist_text(bm, subscirbes))
     await bot.send(ctx, '\n'.join(msg), at_sender=True)
@@ -415,7 +415,7 @@ async def list_subscribe_tree(bot: NoneBot, ctx: Context_T, args: ParseResult):
     now = datetime.now()
     clan = _check_clan(bm)
     subscirbes = bm.list_subscribes(clan["clanid"], now)
-    msg = [L["INFO_LIST_SUBSCRIBES"].format(clan["name"], len(subscirbes))]
+    msg = ['', L["INFO_LIST_SUBSCRIBES"].format(clan["name"], len(subscirbes))]
     msg.append(L["INFO_SUBSCRIBE_QUEUE_TITLE"])
     msg.extend(_gen_namelist_text(bm, subscirbes))
     await bot.send(ctx, '\n'.join(msg), at_sender=True)
@@ -439,7 +439,7 @@ async def on_tree(bot: NoneBot, ctx: Context_T, args: ParseResult):
                      rcode=current_round, bcode=current_boss,
                      flag=SubscribeFlag.ONTREE.value, msg='')
     ontrees = bm.list_subscribes_ontree(cid, now, current_round, current_boss)
-    msg = [L["INFO_ON_TREE"]]
+    msg = ['', L["INFO_ON_TREE"]]
     msg.append(L["INFO_LIST_TREE"].format(clan["name"], len(ontrees)))
     msg.extend(_gen_namelist_text(bm, ontrees))
     await bot.send(ctx, '\n'.join(msg), at_sender=True)
@@ -454,7 +454,7 @@ async def list_tree(bot: NoneBot, ctx: Context_T, args: ParseResult):
     cid = clan["clanid"]
     current_round, current_boss, _ = bm.check_progress(cid, now)
     ontrees = bm.list_subscribes_ontree(cid, now, current_round, current_boss)
-    msg = [L["INFO_LIST_TREE"].format(clan["name"], len(ontrees))]
+    msg = ['', L["INFO_LIST_TREE"].format(clan["name"], len(ontrees))]
     msg.extend(_gen_namelist_text(bm, ontrees))
     await bot.send(ctx, '\n'.join(msg), at_sender=True)
 
@@ -532,6 +532,19 @@ async def lock_boss_ahead(bot: NoneBot, ctx: Context_T, args: ParseResult):
         await bot.send(ctx, L["INFO_LOCK_BOSS"].format(round_text, boss_text, ms.at(uid)), at_sender=True)
 
 
+@cb_cmd(L["CMD_LIST_LOCKED"],
+        ParseArgs(usagekw=L["USAGE_LIST_LOCKED"]))
+async def list_locked(bot: NoneBot, ctx: Context_T, args: ParseResult):
+    bm = ClanBattleManager(ctx["group_id"])
+    now = datetime.now()
+    clan = _check_clan(bm)
+    locked = bm.list_subscribes_locked(clanid=clan["clanid"], time=now)
+    msg = ['', L["INFO_LIST_SUBSCRIBES"].format(clan["name"], len(locked))]
+    msg.append(L["INFO_SUBSCRIBE_QUEUE_TITLE"])
+    msg.extend(_gen_namelist_text(bm, locked))
+    await bot.send(ctx, '\n'.join(msg), at_sender=True)
+
+
 async def auto_unlock_boss(bot: NoneBot, ctx: Context_T, bm: ClanBattleManager, rcode: int, bcode: int):
     now = datetime.now()
     clan = _check_clan(bm)
@@ -593,7 +606,7 @@ async def process_run(bot: NoneBot, ctx: Context_T, args: ParseResult):
         # Late tail damage is required
         raise NotFoundError(L["ERROR_LATE_TAIL_MISSING_DAMAGE"])
 
-    msg = []
+    msg = ['']
     run_list = bm.list_run_by_user_day(
         userid=uid, alt=gid, time=now, hourdelta=bm.UTC_delta(server))
     # If the previous run is tail, this run must be leftover
