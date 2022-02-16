@@ -88,6 +88,17 @@ class ClanBattleManager(object):
         boss_hp = tierinfo["BOSS_HP"][bcode - 1]
         score_rate = tierinfo["SCORE_RATE"][bcode - 1]
         return (boss_hp, score_rate)
+    
+    @staticmethod
+    def filter_round_boss(rcode: int, bcode: int, current_round: int = 0, current_boss: int = 0):
+        if (rcode != 0) and (bcode != 0):
+            return (rcode, bcode)
+        elif (rcode != 0) and (bcode == 0):
+            return (rcode, 1)
+        elif (rcode == 0) and (bcode != 0):
+            return (current_round, bcode)
+        else:
+            return ClanBattleManager.next_boss(current_round, current_boss)
 
     @staticmethod
     def cal_score(rcode: int, bcode: int, damage: int, server: int) -> int:
@@ -331,7 +342,17 @@ class ClanBattleManager(object):
         if "boss" in sinfo:
             sinfo.update({"bcode": sinfo.pop("boss", 0)})
         sinfo["flag"] = newflag
-        return sinfo        
+        return sinfo
+
+    @staticmethod
+    def change_subscribe_round(subscribeinfo: Dict, rcode: int):
+        # Convert keys round -> rcode, boss -> bcode
+        sinfo = subscribeinfo
+        sinfo.pop("round", 0)
+        sinfo.update({"rcode": rcode})
+        if "boss" in sinfo:
+            sinfo.update({"bcode": sinfo.pop("boss", 0)})
+        return sinfo
 
     def add_subscribe(self, userid: int, alt: int, time: datetime, rcode: int, bcode: int, flag: int, msg: str):
         if member := self.fetch_member(userid, alt):
